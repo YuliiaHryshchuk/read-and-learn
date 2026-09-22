@@ -1,13 +1,16 @@
 services:
   web:
     build: .
+    command: pnpm dev --webpack --hostname 0.0.0.0
     ports:
       - "3000:3000"
     environment:
       DATABASE_URL: postgresql://study_reader:study_reader@db:5432/study_reader
+      WATCHPACK_POLLING: "true"
     volumes:
       - .:/app
       - web_node_modules:/app/node_modules
+      - web_next:/app/.next
     depends_on:
       db:
         condition: service_healthy
@@ -29,3 +32,4 @@ services:
 volumes:
   postgres_data:
   web_node_modules:
+  web_next:

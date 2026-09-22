@@ -1,0 +1,66 @@
+.page {
+  min-height: 100vh;
+  background: #fffdfa;
+  color: #172845;
+}
+
+.main {
+  width: min(100% - 48px, 1040px);
+  margin: 0 auto;
+  padding-top: 38px;
+}
+
+.main > h1,
+.main > p {
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.main > h1 {
+  font-size: clamp(20px, 2vw, 25px);
+  line-height: 1.25;
+}
+
+.main > p {
+  margin-top: 3px;
+  font-size: clamp(16px, 1.7vw, 21px);
+  line-height: 1.35;
+}
+
+.main > h2 {
+  margin-top: 38px;
+  margin-bottom: 10px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(27px, 3vw, 34px);
+  line-height: 1.1;
+  color: #111;
+}
+
+.wordLimit {
+  color: #65738b;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.exampleText {
+  color: #273c5b;
+  font-size: 17px;
+  line-height: 1.42;
+  white-space: pre-line;
+}
+
+.exampleText p + p {
+  margin-top: 8px;
+}
+
+@media (max-width: 600px) {
+  .wordLimit {
+    font-size: 12px;
+  }
+
+  .main {
+    width: min(100% - 32px, 1040px);
+    padding-top: 30px;
+  }
+}

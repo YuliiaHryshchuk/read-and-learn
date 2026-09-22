@@ -1,0 +1,163 @@
+.fragment {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #e2e5ec;
+  border-radius: 9px;
+  background: #fff;
+  color: #172845;
+}
+
+.number {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #f7ddd6;
+  color: #a73722;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.body {
+  min-width: 0;
+  flex: 1;
+}
+
+.topRow {
+  min-width: 0;
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.collapseButton {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #b74732;
+  cursor: pointer;
+}
+
+.collapseButton img {
+  width: 20px;
+  height: 20px;
+}
+
+.chevronUp {
+  transform: rotate(180deg);
+}
+
+.previewButton {
+  display: block;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  padding: 6px 0;
+  border: 0;
+  background: transparent;
+  color: #273c5b;
+  font-size: 14px;
+  line-height: 1.35;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.expanded {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  min-width: 0;
+  margin-top: 10px;
+}
+
+.text,
+.translation {
+  min-width: 0;
+  margin: 0;
+  padding: 6px 0;
+  border: 0;
+  background: transparent;
+  color: #273c5b;
+  font-size: 16px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.translation {
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #f7f9fc;
+}
+
+.topRow .text {
+  flex: 1;
+}
+
+.translationButton {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid #cbd5e3;
+  border-radius: 6px;
+  background: #fff;
+  color: #172845;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.translationButton svg {
+  width: 18px;
+  height: 18px;
+}
+
+.explanationCard.explanationCard {
+  min-width: 0;
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid #e8ebf1;
+}
+
+.explanationCard .explanationContent {
+  min-height: calc(3 * 1.5em + 24px);
+  max-height: max(calc(3 * 1.5em + 24px), calc(100dvh - 270px));
+  overflow-y: auto;
+  color: #273c5b;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.withTranslation .explanationContent {
+  max-height: max(calc(3 * 1.5em + 24px), calc(100dvh - 350px));
+}
+
+@media (max-width: 600px) {
+  .fragment {
+    gap: 10px;
+    padding: 8px;
+  }
+
+  .number {
+    width: 26px;
+    height: 26px;
+  }
+
+  .text,
+  .translation {
+    font-size: 14px;
+  }
+}
