@@ -4,9 +4,9 @@ import styles from "./page.module.scss";
 
 export default function NewTextPage() {
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} min-vh-100`}>
       <Header />
-      <main className={styles.main}>
+      <main className="page-container pt-6 pb-8 mobile-pt-5">
         <NewTextForm />
       </main>
     </div>

@@ -1,66 +1,23 @@
 .page {
-  min-height: 100vh;
-  background: #fffdfa;
-  color: #172845;
+  background: var(--color-canvas);
+  color: var(--color-text-strong);
 }
 
-.main {
-  width: min(100% - 48px, 1040px);
-  margin: 0 auto;
-  padding-top: 38px;
-}
-
-.main > h1,
-.main > p {
-  font-family: Arial, Helvetica, sans-serif;
-  font-weight: 700;
+.introTitle {
+  font-size: clamp(20px, 2vw, 25px);
   letter-spacing: 0.01em;
 }
 
-.main > h1 {
-  font-size: clamp(20px, 2vw, 25px);
-  line-height: 1.25;
-}
-
-.main > p {
-  margin-top: 3px;
+.introText {
   font-size: clamp(16px, 1.7vw, 21px);
-  line-height: 1.35;
+  letter-spacing: 0.01em;
 }
 
-.main > h2 {
-  margin-top: 38px;
-  margin-bottom: 10px;
-  font-family: Georgia, "Times New Roman", serif;
+.exampleTitle {
   font-size: clamp(27px, 3vw, 34px);
-  line-height: 1.1;
-  color: #111;
-}
-
-.wordLimit {
-  color: #65738b;
-  font-size: 14px;
-  white-space: nowrap;
-}
-
-.exampleText {
-  color: #273c5b;
-  font-size: 17px;
-  line-height: 1.42;
-  white-space: pre-line;
+  color: var(--color-text-heading);
 }
 
 .exampleText p + p {
   margin-top: 8px;
-}
-
-@media (max-width: 600px) {
-  .wordLimit {
-    font-size: 12px;
-  }
-
-  .main {
-    width: min(100% - 32px, 1040px);
-    padding-top: 30px;
-  }
 }

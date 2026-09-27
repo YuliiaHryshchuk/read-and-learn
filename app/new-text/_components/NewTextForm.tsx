@@ -273,9 +273,9 @@ export default function NewTextForm() {
       <TextContainer
         icon={<Image src="/icons/document.svg" width={22} height={22} alt="" />}
         title={<label htmlFor="source-text">Type your text</label>}
-        contentClassName={styles.inputContainer}
+        contentClassName={`${styles.inputContainer} p-0 overflow-hidden`}
         actions={[
-          <span id="text-limits" className={styles.limits} key="limits">
+          <span id="text-limits" className="text-muted text-md mobile-text-xs" key="limits">
             Up to 300 words · 3000 characters
           </span>,
         ]}
@@ -283,7 +283,7 @@ export default function NewTextForm() {
         <textarea
           id="source-text"
           name="sourceText"
-          className={styles.textarea}
+          className={`${styles.textarea} d-block width-100 p-4 text-xl line-body`}
           aria-describedby="text-limits"
           maxLength={3000}
           lang="es"
@@ -292,44 +292,49 @@ export default function NewTextForm() {
           onChange={(event) => setText(event.target.value)}
         />
       </TextContainer>
-      <div className={styles.actions}>
-        <label className={styles.testMode}>
-          <span className={styles.switch}>
+      <div className="d-flex align-items-center justify-content-between gap-5 mt-7 mobile-flex-column mobile-align-items-stretch mobile-gap-4">
+        <label className="d-inline-flex align-items-center gap-2 text-default cursor-pointer">
+          <span className={`${styles.switch} position-relative d-inline-flex flex-none width-7 height-5`}>
             <input
+              className="position-absolute inset-0 m-0 cursor-pointer"
               type="checkbox"
               checked={testMode}
               disabled={isPending}
               onChange={(event) => setTestMode(event.target.checked)}
             />
-            <span className={styles.switchTrack} aria-hidden="true" />
+            <span className={`${styles.switchTrack} width-100 height-100`} aria-hidden="true" />
           </span>
           <span>
-            <strong>Test mode</strong>
-            <small>Uses Puter’s test API response</small>
+            <strong className="d-block text-md">Test mode</strong>
+            <small className="d-block mt-1 text-xs text-muted">
+              Uses Puter’s test API response
+            </small>
           </span>
         </label>
         <button
           type="button"
-          className={styles.generate}
+          className={`${styles.generate} py-3 px-4 font-semibold cursor-pointer mobile-width-100`}
           onClick={generate}
           disabled={isPending || !hasHydrated}
         >
           {isPending ? "Generating…" : "Generate explanation"}
         </button>
       </div>
-      <p className={styles.status} role="status">
+      <p className="mt-3 text-muted text-md text-right" role="status">
         {message}
       </p>
       {result && (
         <>
-          <TextContainer className={styles.originalCard} title="Original text">
-            <div className={styles.originalText} lang="es">
+          <TextContainer className="mt-5" title="Original text">
+            <div className="white-space-pre-wrap line-body" lang="es">
               {result.sourceText}
             </div>
           </TextContainer>
           {result.kind === "raw" ? (
             <TextContainer title="Puter response">
-              <div className={styles.rawResponse}>{result.content}</div>
+              <div className={`${styles.rawResponse} white-space-pre-wrap line-body`}>
+                {result.content}
+              </div>
             </TextContainer>
           ) : (
             <ProcessedExample

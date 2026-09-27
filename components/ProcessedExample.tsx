@@ -5,7 +5,6 @@ import Image from "next/image";
 import { parseExplanationItems } from "@/lib/adaptation";
 import Fragment from "./Fragment";
 import TextContainer from "./TextContainer";
-import styles from "./processedExample.module.scss";
 
 type ResultItem = {
   text?: string;
@@ -49,8 +48,8 @@ export default function ProcessedExample({ original, result }: ProcessedExampleP
 
   return (
     <TextContainer
-      className={styles.processedCard}
-      contentClassName={styles.fragmentList}
+      className="mt-5 min-width-0"
+      contentClassName="d-grid gap-2 min-width-0 min-height-0 p-0 bg-transparent"
       icon={<Image src="/icons/document.svg" width={22} height={22} alt="" />}
       title="Processed text"
       description="The text is divided into fragments — translate and study them one at a time."
@@ -74,13 +73,13 @@ export default function ProcessedExample({ original, result }: ProcessedExampleP
           text={item.text ?? sentences[index] ?? ""}
           translation={item.translation}
           explanation={
-            <div className={styles.explanation}>
+            <div>
               {getExplanationItems(item.explanation).map(
                 ({ term, meaning }, explanationIndex) => (
                   <p key={`${term}-${explanationIndex}`}>
                     {term ? (
                       <>
-                        <strong>{term}</strong> — {meaning}
+                        <strong className="text-strong">{term}</strong> — {meaning}
                       </>
                     ) : (
                       meaning

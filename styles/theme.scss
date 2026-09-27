@@ -1,0 +1,33 @@
+@use "tokens";
+
+:root {
+  @each $name, $value in tokens.$colors {
+    --color-#{$name}: #{$value};
+  }
+
+  @each $name, $value in tokens.$font-families {
+    --font-#{$name}: #{$value};
+  }
+
+  @each $name, $value in tokens.$font-sizes {
+    --text-#{$name}: #{$value};
+  }
+
+  @each $name, $value in tokens.$font-weights {
+    --weight-#{$name}: #{$value};
+  }
+
+  @each $name, $value in tokens.$line-heights {
+    --line-#{$name}: #{$value};
+  }
+
+  @each $name, $value in tokens.$spacing {
+    --space-#{$name}: #{$value};
+  }
+
+  --content-max-width: #{tokens.$content-max-width};
+  --shadow-card: 0 5px 18px rgb(27 41 64 / 4%);
+  --shadow-raised: 0 8px 24px rgb(73 47 36 / 7%);
+  --shadow-control: 0 1px 3px rgb(23 40 69 / 28%);
+  --focus-accent: rgb(183 77 56 / 28%);
+}

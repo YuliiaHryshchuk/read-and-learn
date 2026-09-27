@@ -1,0 +1,26 @@
+@use "sass:map";
+@use "tokens";
+
+@function color($name) {
+  @if not map.has-key(tokens.$colors, $name) {
+    @error "Unknown color token: #{$name}";
+  }
+
+  @return map.get(tokens.$colors, $name);
+}
+
+@function space($step) {
+  @if not map.has-key(tokens.$spacing, $step) {
+    @error "Unknown spacing step: #{$step}";
+  }
+
+  @return map.get(tokens.$spacing, $step);
+}
+
+@function font-size($name) {
+  @if not map.has-key(tokens.$font-sizes, $name) {
+    @error "Unknown font-size token: #{$name}";
+  }
+
+  @return map.get(tokens.$font-sizes, $name);
+}

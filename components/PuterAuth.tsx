@@ -82,12 +82,15 @@ export default function PuterAuth() {
   }
 
   return (
-    <section className={styles.auth} aria-labelledby="puter-auth-title">
+    <section
+      className={`${styles.auth} d-flex flex-wrap align-items-center justify-content-between gap-6 mt-6 mb-8 p-5 mobile-flex-column mobile-align-items-stretch mobile-gap-4`}
+      aria-labelledby="puter-auth-title"
+    >
       <div>
-        <h2 id="puter-auth-title">
+        <h2 className="font-serif line-heading" id="puter-auth-title">
           {user ? `Welcome, ${user.username}` : "Ready to add your own text?"}
         </h2>
-        <p>
+        <p className="mt-2 text-body line-body">
           {user
             ? "You are signed in with Puter."
             : "Log in with Puter to process and save your own reading materials."}
@@ -95,17 +98,26 @@ export default function PuterAuth() {
       </div>
 
       {user ? (
-        <button className={styles.secondaryButton} type="button" onClick={signOut}>
+        <button
+          className={`${styles.secondaryButton} flex-none min-height-8 py-3 px-5 text-body font-bold cursor-pointer mobile-width-100`}
+          type="button"
+          onClick={signOut}
+        >
           Log out
         </button>
       ) : (
-        <button className={styles.primaryButton} type="button" onClick={signIn} disabled={isLoading}>
+        <button
+          className={`${styles.primaryButton} flex-none min-height-8 py-3 px-5 text-body font-bold cursor-pointer mobile-width-100`}
+          type="button"
+          onClick={signIn}
+          disabled={isLoading}
+        >
           {isLoading ? "Checking sign-in…" : "Log in with Puter"}
         </button>
       )}
 
       {error && (
-        <p className={styles.error} role="alert">
+        <p className="width-100 m-0 text-danger font-semibold" role="alert">
           {error}
         </p>
       )}

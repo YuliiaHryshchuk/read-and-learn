@@ -1,0 +1,26 @@
+@use "sass:map";
+@use "tokens";
+
+@mixin down($breakpoint) {
+  @if not map.has-key(tokens.$breakpoints, $breakpoint) {
+    @error "Unknown breakpoint: #{$breakpoint}";
+  }
+
+  @media (max-width: map.get(tokens.$breakpoints, $breakpoint)) {
+    @content;
+  }
+}
+
+@mixin page-container {
+  width: min(100% - var(--space-6), #{tokens.$content-max-width});
+  margin-inline: auto;
+
+  @include down(sm) {
+    width: min(100% - var(--space-4), #{tokens.$content-max-width});
+  }
+}
+
+@mixin focus-ring($color: var(--color-text-strong)) {
+  outline: 2px solid $color;
+  outline-offset: 3px;
+}

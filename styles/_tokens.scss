@@ -1,0 +1,93 @@
+$colors: (
+  canvas: #fffdfa,
+  surface: #ffffff,
+  surface-subtle: #f9fafc,
+  surface-muted: #f7f9fc,
+  surface-warm: #fff8f3,
+  text: #273c5b,
+  text-strong: #172845,
+  text-heading: #111111,
+  text-muted: #65738b,
+  text-secondary: #53627a,
+  accent: #b74d38,
+  accent-hover: #a64230,
+  accent-dark: #9f3f2e,
+  accent-text: #b74732,
+  accent-strong: #a73722,
+  accent-border: #a94432,
+  accent-soft: #f8e8e4,
+  accent-soft-strong: #f7ddd6,
+  danger: #9f2f25,
+  border: #e4e6ec,
+  border-soft: #e8ebf1,
+  border-warm: #e4d8d0,
+  border-control: #cbd5e3,
+  border-strong: #b9c2d0,
+  divider: #cbd2dd,
+  control: #dbe0e7,
+  control-border: #9ba6b5,
+  control-border-hover: #7d899b,
+  header-border: #f2ede9,
+  neutral-50: #fafafa,
+  neutral-100: #f2f2f2,
+  neutral-200: #ebebeb,
+  neutral-500: #666666,
+  neutral-800: #383838,
+  neutral-950: #0a0a0a,
+  "black": #000000,
+  "white": #ffffff,
+);
+
+$font-families: (
+  sans: (var(--font-geist-sans), Arial, Helvetica, sans-serif),
+  serif: (Georgia, "Times New Roman", serif),
+  mono: (var(--font-geist-mono), "Courier New", monospace),
+);
+
+$font-sizes: (
+  xs: 0.75rem,
+  sm: 0.8125rem,
+  md: 0.875rem,
+  body: 0.9375rem,
+  lg: 1rem,
+  xl: 1.0625rem,
+  2xl: 1.1875rem,
+  3xl: 1.3125rem,
+  4xl: 1.6875rem,
+  5xl: 2.125rem,
+);
+
+$font-weights: (
+  regular: 400,
+  medium: 500,
+  semibold: 600,
+  bold: 700,
+);
+
+$line-heights: (
+  tight: 1.1,
+  heading: 1.25,
+  compact: 1.35,
+  body: 1.5,
+);
+
+$spacing: (
+  0: 0,
+  1: 0.25rem,
+  2: 0.5rem,
+  3: 0.75rem,
+  4: 1rem,
+  5: 1.5rem,
+  6: 2rem,
+  7: 2.5rem,
+  8: 3rem,
+);
+
+// Desktop styles are the default. These values are max-width breakpoints.
+$breakpoints: (
+  sm: 37.5rem,
+  md: 40.625rem,
+  lg: 64rem,
+);
+
+$content-max-width: 65rem;
