@@ -1,35 +1,18 @@
 services:
   web:
     build: .
-    command: pnpm dev --webpack --hostname 0.0.0.0
+    command: pnpm dev:docker
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in .env}
       WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
+      CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV: "false"
     volumes:
       - .:/app
-      - web_node_modules:/app/node_modules
+      - web_node_modules_debian:/app/node_modules
       - web_next:/app/.next
-    depends_on:
-      db:
-        condition: service_healthy
-
-  db:
-    image: postgres:17-alpine
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in .env}
-      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
-      interval: 5s
-      timeout: 5s
-      retries: 10
 
 volumes:
-  postgres_data:
-  web_node_modules:
+  web_node_modules_debian:
   web_next:

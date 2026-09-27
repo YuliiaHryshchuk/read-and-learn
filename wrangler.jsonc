@@ -1,0 +1,25 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+
+  // This is the local Pages project name used by Wrangler.
+  "name": "study-reader-local",
+
+  // Keep local and deployed Workers behavior reproducible.
+  "compatibility_date": "2026-09-25",
+
+  "d1_databases": [
+    {
+      // Pages Functions access this database through context.env.DB.
+      "binding": "DB",
+
+      // This name identifies the local development database.
+      "database_name": "study-reader-local",
+
+      // Replace this placeholder with the production D1 ID before deployment.
+      "database_id": "00000000-0000-0000-0000-000000000001",
+
+      // Pages local development uses this ID for the preview database.
+      "preview_database_id": "DB"
+    }
+  ]
+}

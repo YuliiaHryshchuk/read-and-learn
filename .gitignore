@@ -20,6 +20,9 @@
 # production
 /build
 
+# cloudflare local state
+/.wrangler/
+
 # misc
 .DS_Store
 *.pem

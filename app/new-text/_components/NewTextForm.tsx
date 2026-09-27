@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import ProcessedExample from "@/components/ProcessedExample";
 import TextContainer from "@/components/TextContainer";
+import SaveToLibrary from "./SaveToLibrary";
 import {
   createAdaptationSchema,
   createRawAdaptation,
@@ -12,10 +13,9 @@ import {
   splitIntoFragments,
   type SourceFragment,
 } from "@/lib/adaptation";
+import { TARGET_LANGUAGE } from "@/lib/languages";
 import { useTextStore } from "@/stores/useTextStore";
 import styles from "../page.module.scss";
-
-const TARGET_LANGUAGE = "English";
 
 const SYSTEM_INSTRUCTION_TEMPLATE = `Create a translation and study explanation for language learners.
 
@@ -275,7 +275,11 @@ export default function NewTextForm() {
         title={<label htmlFor="source-text">Type your text</label>}
         contentClassName={`${styles.inputContainer} p-0 overflow-hidden`}
         actions={[
-          <span id="text-limits" className="text-muted text-md mobile-text-xs" key="limits">
+          <span
+            id="text-limits"
+            className="text-muted text-md mobile-text-xs"
+            key="limits"
+          >
             Up to 300 words · 3000 characters
           </span>,
         ]}
@@ -294,7 +298,9 @@ export default function NewTextForm() {
       </TextContainer>
       <div className="d-flex align-items-center justify-content-between gap-5 mt-7 mobile-flex-column mobile-align-items-stretch mobile-gap-4">
         <label className="d-inline-flex align-items-center gap-2 text-default cursor-pointer">
-          <span className={`${styles.switch} position-relative d-inline-flex flex-none width-7 height-5`}>
+          <span
+            className={`${styles.switch} position-relative d-inline-flex flex-none width-7 height-5`}
+          >
             <input
               className="position-absolute inset-0 m-0 cursor-pointer"
               type="checkbox"
@@ -302,7 +308,10 @@ export default function NewTextForm() {
               disabled={isPending}
               onChange={(event) => setTestMode(event.target.checked)}
             />
-            <span className={`${styles.switchTrack} width-100 height-100`} aria-hidden="true" />
+            <span
+              className={`${styles.switchTrack} width-100 height-100`}
+              aria-hidden="true"
+            />
           </span>
           <span>
             <strong className="d-block text-md">Test mode</strong>
@@ -325,27 +334,27 @@ export default function NewTextForm() {
       </p>
       {result && (
         <>
-          <TextContainer className="mt-5" title="Original text">
-            <div className="white-space-pre-wrap line-body" lang="es">
-              {result.sourceText}
-            </div>
-          </TextContainer>
           {result.kind === "raw" ? (
             <TextContainer title="Puter response">
-              <div className={`${styles.rawResponse} white-space-pre-wrap line-body`}>
+              <div
+                className={`${styles.rawResponse} white-space-pre-wrap line-body`}
+              >
                 {result.content}
               </div>
             </TextContainer>
           ) : (
-            <ProcessedExample
-              key={result.sourceText}
-              original={result.sourceText}
-              result={result.fragments.map((fragment) => ({
-                text: fragment.text,
-                translation: fragment.translation,
-                explanation: fragment.explanation,
-              }))}
-            />
+            <>
+              <ProcessedExample
+                key={result.sourceText}
+                original={result.sourceText}
+                result={result.fragments.map((fragment) => ({
+                  text: fragment.text,
+                  translation: fragment.translation,
+                  explanation: fragment.explanation,
+                }))}
+              />
+              <SaveToLibrary />
+            </>
           )}
         </>
       )}
