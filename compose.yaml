@@ -5,7 +5,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: postgresql://study_reader:study_reader@db:5432/study_reader
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in .env}
       WATCHPACK_POLLING: "true"
     volumes:
       - .:/app
@@ -18,13 +18,13 @@ services:
   db:
     image: postgres:17-alpine
     environment:
-      POSTGRES_DB: study_reader
-      POSTGRES_USER: study_reader
-      POSTGRES_PASSWORD: study_reader
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in .env}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U study_reader -d study_reader"]
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
       interval: 5s
       timeout: 5s
       retries: 10

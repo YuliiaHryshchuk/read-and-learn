@@ -2,6 +2,7 @@ import Header from "@/components/Header";
 import Image from "next/image";
 import TextContainer from "@/components/TextContainer";
 import ProcessedExample from "@/components/ProcessedExample";
+import PuterAuth from "@/components/PuterAuth";
 import styles from "./page.module.scss";
 
 const original = `Cuando Lucía llegó a Montevideo, todavía no conocía bien la ciudad. Cada mañana salía a caminar por su barrio, escuchaba conversaciones en español y anotaba las palabras nuevas. Poco a poco empezó a reconocer expresiones, tiempos verbales y maneras distintas de decir lo mismo.
@@ -151,6 +152,8 @@ export default function Home() {
         </TextContainer>
 
         <ProcessedExample original={original} result={result} />
+
+        <PuterAuth />
 
         {/* The rest of the page is paused for now.
         <section>

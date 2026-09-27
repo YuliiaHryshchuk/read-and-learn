@@ -17,6 +17,7 @@ export default function Header() {
           <span>Read and study</span>
         </Link>
         <nav className={styles.nav} aria-label="Main navigation">
+          <Link href="/new-text">New text</Link>
           <Link href="/library">My library</Link>
           <Link href="/profile">Profile</Link>
         </nav>

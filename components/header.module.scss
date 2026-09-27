@@ -47,6 +47,9 @@
 @media (max-width: 600px) {
   .inner {
     width: min(100% - 32px, 1040px);
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-block: 14px;
   }
 
   .brand {

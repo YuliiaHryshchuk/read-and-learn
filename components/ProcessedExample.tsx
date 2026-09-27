@@ -2,19 +2,31 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { parseExplanationItems } from "@/lib/adaptation";
 import Fragment from "./Fragment";
 import TextContainer from "./TextContainer";
 import styles from "./processedExample.module.scss";
 
 type ResultItem = {
+  text?: string;
   translation: string;
-  explanation: Record<string, string>;
+  explanation: string | Record<string, string> | Array<{ term: string; meaning: string }>;
 };
 
 type ProcessedExampleProps = {
   original: string;
   result: ResultItem[];
 };
+
+function getExplanationItems(explanation: ResultItem["explanation"]) {
+  if (typeof explanation === "string") {
+    return parseExplanationItems(explanation);
+  }
+
+  return Array.isArray(explanation)
+    ? explanation
+    : Object.entries(explanation).map(([term, meaning]) => ({ term, meaning }));
+}
 
 export default function ProcessedExample({ original, result }: ProcessedExampleProps) {
   const [openFragments, setOpenFragments] = useState<Set<number>>(() => new Set([0]));
@@ -59,15 +71,23 @@ export default function ProcessedExample({ original, result }: ProcessedExampleP
         <Fragment
           key={index}
           number={index + 1}
-          text={sentences[index] ?? ""}
+          text={item.text ?? sentences[index] ?? ""}
           translation={item.translation}
           explanation={
             <div className={styles.explanation}>
-              {Object.entries(item.explanation).map(([term, meaning]) => (
-                <p key={term}>
-                  <strong>{term}</strong> — {meaning}
-                </p>
-              ))}
+              {getExplanationItems(item.explanation).map(
+                ({ term, meaning }, explanationIndex) => (
+                  <p key={`${term}-${explanationIndex}`}>
+                    {term ? (
+                      <>
+                        <strong>{term}</strong> — {meaning}
+                      </>
+                    ) : (
+                      meaning
+                    )}
+                  </p>
+                ),
+              )}
             </div>
           }
           isOpen={openFragments.has(index)}

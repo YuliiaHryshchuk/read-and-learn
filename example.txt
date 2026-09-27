@@ -1,0 +1,206 @@
+Original text:
+Aliviado, Boris se tiró dentro, bebió un sorbo de agua y atrapó una mosca con deleite. En el preciso momento en el que se ponía a buscar un sitio para descansar descubrió, entre los juncos, cinco figuras que lo observaban con desconfianza.
+
+-Esto es un estanque de sapos le dijo uno de ellos- y tú no eres un sapo; ni siquiera tienes verrugas. ¡Vete a nadar a otra parte!
+
+Response:
+Aliviado, Boris se tiró dentro, bebió un sorbo de agua y atrapó una mosca con deleite.
+Перевод: «С облегчением Борис прыгнул внутрь, сделал глоток воды и с удовольствием поймал муху.»
+Разбор:
+- aliviado — облегчённый / почувствовавший облегчение. По-русски естественнее: «с облегчением».
+- se tiró dentro — прыгнул внутрь / бросился внутрь.
+  - tirarse = бросаться, прыгать куда-то
+  - se tiró — Pretérito Indefinido
+- bebió un sorbo de agua — сделал глоток воды
+  - sorbo = глоток
+- atrapó una mosca — поймал муху
+  - atrapar = ловить, поймать
+- con deleite — с удовольствием / с наслаждением
+То есть здесь три последовательных завершённых действия:
+se tiró → bebió → atrapó.
+
+En el preciso momento en el que se ponía a buscar un sitio para descansar descubrió, entre los juncos, cinco figuras que lo observaban con desconfianza.
+Перевод: «В тот самый момент, когда он уже собирался искать место для отдыха, он заметил среди камышей пять фигур, которые недоверчиво за ним наблюдали.»
+En el preciso momento en el que...
+= «в тот самый момент, когда...»
+- preciso здесь не «точный» в нашем обычном смысле, а «именно тот самый»
+- en el momento en el que = в момент, когда
+se ponía a buscar
+= начинал искать / собирался начать искать
+
+ponerse a + infinitivo = приняться что-то делать
+Здесь se ponía — Pretérito Imperfecto, потому что действие как бы было в процессе начала, когда его перебило другое событие.
+То есть структура:
+se ponía a buscar... cuando descubrió...
+= он уже начинал искать..., когда заметил...
+Дальше:
+- un sitio para descansar — место, чтобы отдохнуть / место для отдыха
+- descubrió — обнаружил, заметил
+- entre los juncos — среди камышей
+- juncos — камыши / тростник
+- cinco figuras — пять фигур
+- que lo observaban — которые наблюдали за ним
+- lo = его, то есть Бориса
+- observar = наблюдать
+- con desconfianza — с недоверием, подозрительно
+Здесь очень показательное сочетание времён:
+se ponía — Imperfecto, фон / незавершённый процесс
+descubrió — Indefinido, внезапное конкретное событие
+observaban — Imperfecto, длительное действие: они уже наблюдали за ним
+—Esto es un estanque de sapos —le dijo uno de ellos— y tú no eres un sapo; ni siquiera tienes verrugas.
+Перевод: «Это пруд для жаб, — сказал ему один из них, — а ты не жаба; у тебя даже бородавок нет.»
+Разбор:
+- un estanque de sapos — пруд с жабами / жабий пруд
+- le dijo — сказал ему
+  - le = ему
+  - dijo = Pretérito Indefinido от decir
+- uno de ellos — один из них
+- tú no eres un sapo — ты не жаба
+- ni siquiera — даже не
+- tienes verrugas — у тебя есть бородавки
+- verrugas — бородавки
+ni siquiera tienes verrugas
+= «у тебя даже бородавок нет»
+¡Vete a nadar a otra parte!
+Перевод: «Иди плавай в другом месте!» / «Плыви отсюда в другое место!»
+Здесь сразу две важные вещи:
+vete — уходи / иди отсюда
+Это повелительная форма от irse:
+ir → ve
+irse → vete
+a nadar — плавать
+a otra parte — в другое место / куда-нибудь ещё
+Вся фраза vete a + infinitivo может звучать довольно резко:
+«Иди делай это где-нибудь в другом месте.»
+То есть по смыслу здесь:
+«Плыви отсюда и ищи другое место!»
+
+Original text 2:
+Trepó hasta lo alto de un terraplén, atravesó una carretera y llego a otro estanque.
+
+Response 2:
+Trepó hasta lo alto de un terraplén, atravesó una carretera y llegó a otro estanque.
+Перевод: «Он взобрался на вершину насыпи, пересёк дорогу и добрался до другого пруда.»
+
+- trepar — карабкаться, взбираться
+- hasta lo alto de — до самого верха / на вершину
+- un terraplén — насыпь, земляной вал
+- atravesar una carretera — перейти / пересечь дорогу
+- llegar a — добраться до / прийти к
+- otro estanque — другой пруд
+Все три глагола — завершённые действия в прошлом, поэтому Pretérito Indefinido:
+trepó → atravesó → llegó.
+И маленькая поправка: правильно llegó с ударением.
+
+Original text 3:
+– Oye amigo, esto es un estanque de carpas – le dijo una de las cabezas soltando burbujas – y tú no tienes escamas, así que ¡haz el favor de volver a tierra!
+
+Response 3:
+– Oye amigo, esto es un estanque de carpas – le dijo una de las cabezas soltando burbujas – y tú no tienes escamas, así que ¡haz el favor de volver a tierra!
+Перевод: «Слушай, приятель, это пруд с карпами, — сказала ему одна из голов, пуская пузыри, — а у тебя нет чешуи, так что будь добр, возвращайся на сушу!»
+
+- oye, amigo — «слушай, приятель». Oye — повелительная форма от oír.
+- un estanque de carpas — «пруд с карпами / карповый пруд».
+- le dijo — «сказала ему». le = ему, dijo — Pretérito Indefinido от decir.
+- una de las cabezas — «одна из голов». Тут имеется в виду одна из рыб, которые высунули головы.
+- soltando burbujas — «пуская пузыри». soltar burbujas = выпускать / пускать пузыри.
+- no tienes escamas — «у тебя нет чешуи». escamas — чешуя / чешуйки.
+- así que — «так что / поэтому». Очень частая связка.
+- haz el favor de + infinitivo — буквально «сделай одолжение и…», по смыслу «будь добр, сделай… / пожалуйста, сделай…». В зависимости от тона может звучать и довольно резко.
+- volver a tierra — вернуться на сушу.
+И отдельно haz — это повелительная форма hacer для tú:
+hacer → haz = «сделай».
+Здесь ¡haz el favor de volver a tierra! по тону скорее не нежное «пожалуйста», а «будь добр, возвращайся на сушу!».
+
+Original text 4:
+Saltó dentro, bebió un buen sorbo de agua y se posó, contento, en una piedra.
+
+Response 4:
+Saltó dentro, bebió un buen sorbo de agua y se posó, contento, en una piedra.
+Перевод: «Он прыгнул внутрь, сделал хороший глоток воды и, довольный, уселся на камень.»
+Разбор:
+- saltó dentro — прыгнул внутрь
+  - saltó — Pretérito Indefinido от saltar
+  - dentro — внутрь / внутри
+- bebió — выпил
+  - Pretérito Indefinido от beber
+- un buen sorbo de agua — хороший / большой глоток воды
+  - sorbo — глоток
+- se posó — сел / опустился / уселся
+  - от posarse
+  - часто употребляется о птице или небольшом животном, которое садится на поверхность
+- contento — довольный
+  - относится к Борису
+- en una piedra — на камне
+Здесь подряд идут три завершённых действия в прошлом: saltó → bebió → se posó. Поэтому везде Pretérito Indefinido.
+
+Original text 5:
+Boris no paró de saltar hasta quedarse totalmente sin aliento.
+
+Response 5:
+Boris no paró de saltar hasta quedarse totalmente sin aliento.
+Перевод: «Борис не переставал прыгать, пока совсем не выбился из сил / не запыхался.»
+Разбор:
+- Boris — Борис
+- no paró de saltar — не переставал прыгать
+  - parar de + infinitivo = перестать что-то делать
+  - paró — Pretérito Indefinido от parar
+  - saltar — прыгать
+- hasta — до тех пор пока / пока не
+- quedarse — здесь значит оказаться в каком-то состоянии
+  - quedarse sin algo = остаться без чего-то
+- totalmente — полностью, совершенно
+- sin aliento — буквально «без дыхания», естественно:
+  запыхавшись / без сил / едва переводя дух
+То есть конструкция:
+no paró de saltar hasta quedarse sin aliento
+= он продолжал прыгать, пока не запыхался окончательно.
+
+Original text 6:
+Boris no había visto una cigüeña en toda su vida, pero pronto comprendió el grave peligro que corría.
+
+Response 6:
+Boris no había visto una cigüeña en toda su vida, pero pronto comprendió el grave peligro que corría.
+Перевод:
+«Борис за всю свою жизнь ни разу не видел аиста, но вскоре понял, какая серьёзная опасность ему угрожала.»
+По частям:
+- Boris no había visto — «Борис не видел / никогда прежде не видел».
+  había visto — это Pretérito Pluscuamperfecto: действие произошло раньше другого действия в прошлом.
+  Здесь: сначала Борис никогда не видел аиста, потом comprendió — понял.
+- una cigüeña — «аиста».
+- en toda su vida — «за всю свою жизнь».
+Итого:
+no había visto una cigüeña en toda su vida = «за всю свою жизнь он ни разу не видел аиста».
+Дальше:
+- pero — «но»
+- pronto — «скоро / вскоре»
+- comprendió — «понял»
+  Это Pretérito Indefinido от comprender.
+- el grave peligro — «серьёзную / большую опасность»
+- que corría — буквально «которую он испытывал / которой подвергался».
+Здесь важно выражение:
+correr peligro = быть в опасности / подвергаться опасности.
+Например:
+Corre peligro. — Он в опасности.
+Corría peligro. — Он был в опасности / ему угрожала опасность.
+Поэтому:
+el grave peligro que corría
+буквально: «серьёзная опасность, которой он подвергался»
+естественно: «серьёзная опасность, которая ему угрожала».
+И здесь сразу три прошедшие формы:
+había visto — Pluscuamperfecto → произошло раньше всего;
+comprendió — Indefinido → конкретный момент: «понял»;
+corría — Imperfecto → состояние/продолжающаяся ситуация: «находился в опасности».
+
+лучшие модели на рассмотрение
+anthropic/claude-haiku-4-5
+anthropic/claude-sonnet-4-6
+google/gemini-3.5-flash-lite
+google/gemini-3.8-flash
+mistralai/mistral-small-2603
+mistralai/mistral-medium-3-5
+deepseek/deepseek-v4.1-flash
+qwen/qwen3.8-flash
+qwen/qwen-mt-turbo
+openai/gpt-5.6-luna
+x-ai/grok-4-20-non-reasoning
