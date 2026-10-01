@@ -89,6 +89,95 @@
   }
 }
 
+.generateGroup {
+  min-width: 250px;
+}
+
+.generateMain {
+  border-radius: 5px 0 0 5px;
+}
+
+.generateMenu {
+  flex: none;
+}
+
+.generateToggle {
+  width: 42px;
+  border: 1px solid var(--color-accent);
+  border-left-color: rgb(255 255 255 / 30%);
+  border-radius: 0 5px 5px 0;
+  background: var(--color-accent);
+  list-style: none;
+}
+
+.generateToggle::-webkit-details-marker {
+  display: none;
+}
+
+.generateToggle:hover,
+.generateMenu[open] .generateToggle {
+  background: var(--color-accent-hover);
+}
+
+.generateToggle:focus-visible {
+  outline: 2px solid var(--color-text-strong);
+  outline-offset: 3px;
+}
+
+.generateToggle[aria-disabled="true"] {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.generateChevron {
+  filter: brightness(0) invert(1);
+  transition: transform 150ms ease;
+}
+
+.generateMenu[open] .generateChevron {
+  transform: rotate(180deg);
+}
+
+.generateMenuPanel {
+  z-index: 5;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 190px;
+  border: 1px solid var(--color-border-warm);
+  border-radius: 7px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-raised);
+}
+
+.generateMenuPanel button {
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--color-text-strong);
+  font: inherit;
+}
+
+.generateMenuPanel button:hover:not(:disabled) {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-strong);
+}
+
+.generateMenuPanel button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.generateMenuPanel button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+@media (max-width: 37.5rem) {
+  .generateGroup {
+    min-width: 0;
+  }
+}
+
 .rawResponse {
   overflow-wrap: anywhere;
 }

@@ -1,4 +1,5 @@
 import { isAdaptationResult, type StructuredAdaptationResult } from "../../lib/adaptation";
+import { countWords } from "../../lib/text";
 import {
   PuterAuthenticationError,
   requirePuterUser,
@@ -23,7 +24,7 @@ type FunctionContext = {
   env: Env;
 };
 
-type CreateMaterialBody = {
+export type CreateMaterialBody = {
   title: string;
   sourceText: string;
   sourceLanguage: string;
@@ -41,12 +42,14 @@ type CreatedMaterial = {
 type MaterialListItem = {
   id: string;
   title: string;
+  preview: string;
 };
 
 const MAX_REQUEST_BYTES = 250_000;
 const MAX_TITLE_LENGTH = 120;
 const MAX_SOURCE_LENGTH = 3_000;
 const MAX_LANGUAGE_LENGTH = 100;
+const PAGE_SIZE = 10;
 
 function json(data: unknown, status = 200) {
   return Response.json(data, {
@@ -79,7 +82,7 @@ function isBoundedText(value: unknown, maxLength: number): value is string {
     && value.length <= maxLength;
 }
 
-function parseCreateMaterialBody(value: unknown): CreateMaterialBody | null {
+export function parseCreateMaterialBody(value: unknown): CreateMaterialBody | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const body = value as Record<string, unknown>;
   const expectedKeys = [
@@ -103,8 +106,7 @@ function parseCreateMaterialBody(value: unknown): CreateMaterialBody | null {
   if (body.adaptation.kind !== "structured") return null;
   if (body.adaptation.sourceText !== body.sourceText) return null;
 
-  const wordCount = body.sourceText.trim().split(/\s+/u).length;
-  if (wordCount > 300) return null;
+  if (countWords(body.sourceText) > 300) return null;
 
   return {
     title: body.title.trim(),
@@ -204,16 +206,31 @@ export async function onRequestPost({ request, env }: FunctionContext) {
 export async function onRequestGet({ request, env }: FunctionContext) {
   try {
     const user = await requirePuterUser(request);
+    const requestUrl = new URL(request.url);
+    const offsetValue = requestUrl.searchParams.get("offset") ?? "0";
+    if (!/^\d+$/u.test(offsetValue)) {
+      return invalidRequest("The library offset is invalid.");
+    }
+
+    const offset = Number(offsetValue);
+    if (!Number.isSafeInteger(offset) || offset > 100_000) {
+      return invalidRequest("The library offset is invalid.");
+    }
+
     const { results } = await env.DB.prepare(`
-      SELECT id, title
+      SELECT id, title, source_text AS preview
       FROM materials
       WHERE owner_uuid = ?
       ORDER BY updated_at DESC, id DESC
+      LIMIT ? OFFSET ?
     `)
-      .bind(user.uuid)
+      .bind(user.uuid, PAGE_SIZE + 1, offset)
       .all<MaterialListItem>();
 
-    return json({ materials: results });
+    return json({
+      materials: results.slice(0, PAGE_SIZE),
+      hasMore: results.length > PAGE_SIZE,
+    });
   } catch (error) {
     if (error instanceof PuterAuthenticationError) {
       return authenticationErrorResponse(error);

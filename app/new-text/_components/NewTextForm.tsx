@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import ProcessedExample from "@/components/ProcessedExample";
 import TextContainer from "@/components/TextContainer";
@@ -8,14 +8,24 @@ import SaveToLibrary from "./SaveToLibrary";
 import {
   createAdaptationSchema,
   createRawAdaptation,
+  isAdaptationResult,
   InvalidAdaptationError,
   parseModelAdaptation,
   splitIntoFragments,
   type SourceFragment,
+  type StructuredAdaptationResult,
 } from "@/lib/adaptation";
 import { TARGET_LANGUAGE } from "@/lib/languages";
+import {
+  mergeIncrementalAdaptation,
+  planIncrementalAdaptation,
+} from "@/lib/incrementalAdaptation";
+import { countWords } from "@/lib/text";
 import { useTextStore } from "@/stores/useTextStore";
 import styles from "../page.module.scss";
+
+const MAX_WORDS = 300;
+const MAX_CHARACTERS = 3_000;
 
 const SYSTEM_INSTRUCTION_TEMPLATE = `Create a translation and study explanation for language learners.
 
@@ -182,15 +192,27 @@ function buildMessages(fragments: SourceFragment[], language: string) {
 }
 
 export default function NewTextForm() {
+  const regenerateMenuRef = useRef<HTMLDetailsElement>(null);
   const text = useTextStore((state) => state.text);
   const setText = useTextStore((state) => state.setText);
   const result = useTextStore((state) => state.result);
+  const editingMaterial = useTextStore((state) => state.editingMaterial);
+  const startEditingMaterial = useTextStore((state) => state.startEditingMaterial);
+  const clearEditingMaterial = useTextStore((state) => state.clearEditingMaterial);
   const setResult = useTextStore((state) => state.setResult);
   const clearResult = useTextStore((state) => state.clearResult);
   const hasHydrated = useTextStore((state) => state.hasHydrated);
   const [isPending, setIsPending] = useState(false);
+  const [isLoadingSavedMaterial, setIsLoadingSavedMaterial] = useState(false);
   const [testMode, setTestMode] = useState(true);
   const [message, setMessage] = useState("");
+  const wordCount = countWords(text);
+  const remainingWords = MAX_WORDS - wordCount;
+  const isOverWordLimit = remainingWords < 0;
+  const generationDisabled = isPending
+    || isLoadingSavedMaterial
+    || !hasHydrated
+    || isOverWordLimit;
 
   useEffect(() => {
     if (!useTextStore.getState().hasHydrated) {
@@ -200,27 +222,129 @@ export default function NewTextForm() {
     }
   }, []);
 
-  async function generate() {
-    if (isPending || !hasHydrated) return;
+  useEffect(() => {
+    if (!hasHydrated) return;
+    const editingMaterialId = new URLSearchParams(window.location.search).get("edit");
+    const currentDraft = useTextStore.getState();
+    if (!editingMaterialId) {
+      if (currentDraft.editingMaterial) {
+        setText("");
+        clearResult();
+        clearEditingMaterial();
+      }
+      return;
+    }
+
+    if (
+      currentDraft.editingMaterial?.id === editingMaterialId
+      && currentDraft.result?.kind === "structured"
+      && currentDraft.text === currentDraft.result.sourceText
+    ) {
+      return;
+    }
+
+    let isCurrent = true;
+    async function loadSavedMaterial() {
+      setIsLoadingSavedMaterial(true);
+      setMessage("");
+      try {
+        const { puter } = await import("@heyputer/puter.js");
+        if (!puter.auth.isSignedIn() || !puter.authToken) {
+          throw new Error("Log in with Puter to edit this material.");
+        }
+
+        const response = await fetch(
+          `/api/materials/${encodeURIComponent(editingMaterialId!)}`,
+          {
+            headers: {
+              Authorization: `Bearer ${puter.authToken}`,
+            },
+          },
+        );
+        const payload: unknown = await response.json().catch(() => null);
+        if (!response.ok) {
+          throw new Error(
+            getApiError(payload) ?? "The material could not be loaded.",
+          );
+        }
+
+        const material = payload && typeof payload === "object"
+          ? (payload as { material?: unknown }).material
+          : null;
+        if (!isEditableMaterial(material) || material.id !== editingMaterialId) {
+          throw new Error("The material returned an invalid response.");
+        }
+
+        if (isCurrent) startEditingMaterial(material);
+      } catch (error) {
+        if (isCurrent) {
+          setMessage(
+            error instanceof Error
+              ? error.message
+              : "The material could not be loaded.",
+          );
+        }
+      } finally {
+        if (isCurrent) setIsLoadingSavedMaterial(false);
+      }
+    }
+
+    void loadSavedMaterial();
+    return () => {
+      isCurrent = false;
+    };
+  }, [
+    clearEditingMaterial,
+    clearResult,
+    hasHydrated,
+    setText,
+    startEditingMaterial,
+  ]);
+
+  useEffect(() => {
+    function closeRegenerateMenu(event: PointerEvent) {
+      const menu = regenerateMenuRef.current;
+      if (menu && !menu.contains(event.target as Node)) menu.open = false;
+    }
+
+    document.addEventListener("pointerdown", closeRegenerateMenu);
+    return () => document.removeEventListener("pointerdown", closeRegenerateMenu);
+  }, []);
+
+  async function generate(forceRegenerate = false) {
+    if (isPending || isLoadingSavedMaterial || !hasHydrated) return;
     if (!text.trim()) {
       setMessage("Enter some text first.");
       return;
     }
-    if (text.length > 3000 || text.trim().split(/\s+/u).length > 300) {
-      setMessage("Use up to 300 words and 3000 characters.");
+    if (text.length > MAX_CHARACTERS || isOverWordLimit) {
+      setMessage("Use up to 300 words.");
       return;
     }
     setIsPending(true);
     setMessage("");
 
     try {
+      const existingResult = result?.kind === "structured" ? result : null;
+      const previousResult = forceRegenerate ? null : existingResult;
+      const updatePlan = previousResult
+        ? planIncrementalAdaptation(text, previousResult)
+        : null;
+      const sourceFragments = updatePlan?.fragmentsToProcess
+        ?? splitIntoFragments(text);
+
+      if (updatePlan && sourceFragments.length === 0) {
+        setResult(mergeIncrementalAdaptation(updatePlan, []));
+        setMessage("The explanation is up to date.");
+        return;
+      }
+
       const { puter } = await import("@heyputer/puter.js");
 
       if (!puter.auth.isSignedIn()) {
         await puter.auth.signIn();
       }
 
-      const sourceFragments = splitIntoFragments(text);
       const messages = buildMessages(sourceFragments, TARGET_LANGUAGE);
       const options = {
         model: "gpt-5.4-mini",
@@ -241,10 +365,6 @@ export default function NewTextForm() {
         } as unknown as { verbosity: string },
       };
 
-      // Do not leave an earlier Test mode result visible while a real request
-      // is pending or after the new response fails validation.
-      clearResult();
-
       const response = await puter.ai.chat(messages, options, testMode);
       if (response.finish_reason === "length") {
         throw new GenerationLimitError();
@@ -256,9 +376,19 @@ export default function NewTextForm() {
       }
 
       try {
-        setResult(parseModelAdaptation(generatedText, text, sourceFragments));
+        const processed = parseModelAdaptation(
+          generatedText,
+          text,
+          sourceFragments,
+        );
+        setResult(
+          updatePlan && processed.kind === "structured"
+            ? mergeIncrementalAdaptation(updatePlan, processed.fragments)
+            : processed,
+        );
       } catch (error) {
         if (!(error instanceof InvalidAdaptationError)) throw error;
+        if (existingResult) throw error;
         setResult(createRawAdaptation(text, generatedText));
       }
     } catch (error) {
@@ -272,15 +402,20 @@ export default function NewTextForm() {
     <>
       <TextContainer
         icon={<Image src="/icons/document.svg" width={22} height={22} alt="" />}
-        title={<label htmlFor="source-text">Type your text</label>}
+        title={
+          <label htmlFor="source-text">
+            {editingMaterial ? `Edit “${editingMaterial.title}”` : "Type your text"}
+          </label>
+        }
         contentClassName={`${styles.inputContainer} p-0 overflow-hidden`}
         actions={[
           <span
             id="text-limits"
-            className="text-muted text-md mobile-text-xs"
+            className={`${isOverWordLimit ? "text-danger" : "text-muted"} text-md mobile-text-xs`}
             key="limits"
+            role="status"
           >
-            Up to 300 words · 3000 characters
+            {remainingWords}/{MAX_WORDS} words remaining
           </span>,
         ]}
       >
@@ -289,10 +424,10 @@ export default function NewTextForm() {
           name="sourceText"
           className={`${styles.textarea} d-block width-100 p-4 text-xl line-body`}
           aria-describedby="text-limits"
-          maxLength={3000}
+          maxLength={MAX_CHARACTERS}
           lang="es"
           value={text}
-          disabled={!hasHydrated || isPending}
+          disabled={!hasHydrated || isPending || isLoadingSavedMaterial}
           onChange={(event) => setText(event.target.value)}
         />
       </TextContainer>
@@ -320,14 +455,66 @@ export default function NewTextForm() {
             </small>
           </span>
         </label>
-        <button
-          type="button"
-          className={`${styles.generate} py-3 px-4 font-semibold cursor-pointer mobile-width-100`}
-          onClick={generate}
-          disabled={isPending || !hasHydrated}
-        >
-          {isPending ? "Generating…" : "Generate explanation"}
-        </button>
+        {result ? (
+          <div className={`${styles.generateGroup} d-flex position-relative mobile-width-100`}>
+            <button
+              type="button"
+              className={`${styles.generate} ${styles.generateMain} flex-1 py-3 px-4 font-semibold cursor-pointer`}
+              onClick={() => void generate()}
+              disabled={generationDisabled}
+            >
+              {isLoadingSavedMaterial
+                ? "Loading saved text…"
+                : isPending
+                  ? "Updating…"
+                  : "Update explanation"}
+            </button>
+            <details ref={regenerateMenuRef} className={styles.generateMenu}>
+              <summary
+                className={`${styles.generateToggle} d-grid place-items-center height-100 cursor-pointer`}
+                aria-label="More generation options"
+                aria-disabled={generationDisabled}
+                onClick={(event) => {
+                  if (generationDisabled) event.preventDefault();
+                }}
+              >
+                <Image
+                  className={styles.generateChevron}
+                  src="/icons/chevron-down.svg"
+                  width={18}
+                  height={18}
+                  alt=""
+                />
+              </summary>
+              <div className={`${styles.generateMenuPanel} position-absolute p-1`}>
+                <button
+                  type="button"
+                  className="width-100 p-3 text-left cursor-pointer"
+                  disabled={generationDisabled}
+                  onClick={() => {
+                    regenerateMenuRef.current?.removeAttribute("open");
+                    void generate(true);
+                  }}
+                >
+                  Generate again
+                </button>
+              </div>
+            </details>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className={`${styles.generate} py-3 px-4 font-semibold cursor-pointer mobile-width-100`}
+            onClick={() => void generate()}
+            disabled={generationDisabled}
+          >
+            {isLoadingSavedMaterial
+              ? "Loading saved text…"
+              : isPending
+                ? "Generating…"
+                : "Generate explanation"}
+          </button>
+        )}
       </div>
       <p className="mt-3 text-muted text-md text-right" role="status">
         {message}
@@ -353,11 +540,33 @@ export default function NewTextForm() {
                   explanation: fragment.explanation,
                 }))}
               />
-              <SaveToLibrary />
+              {result.sourceText === text && <SaveToLibrary />}
             </>
           )}
         </>
       )}
     </>
   );
+}
+
+function getApiError(payload: unknown) {
+  if (!payload || typeof payload !== "object") return null;
+  const message = (payload as { error?: { message?: unknown } }).error?.message;
+  return typeof message === "string" ? message : null;
+}
+
+function isEditableMaterial(value: unknown): value is {
+  id: string;
+  title: string;
+  sourceText: string;
+  adaptation: StructuredAdaptationResult;
+} {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Record<string, unknown>;
+  return typeof candidate.id === "string"
+    && typeof candidate.title === "string"
+    && typeof candidate.sourceText === "string"
+    && isAdaptationResult(candidate.adaptation)
+    && candidate.adaptation.kind === "structured"
+    && candidate.adaptation.sourceText === candidate.sourceText;
 }

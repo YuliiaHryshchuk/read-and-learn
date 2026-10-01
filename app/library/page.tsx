@@ -7,7 +7,7 @@ export default function LibraryPage() {
     <div className={`${styles.page} min-vh-100`}>
       <Header />
       <main className="page-container pt-6 pb-8 mobile-pt-5">
-        <h2>My library</h2>
+        <h1 className={`${styles.title} font-serif line-tight`}>My library</h1>
         <LibraryList />
       </main>
     </div>

@@ -247,15 +247,27 @@ export function isAdaptationResult(value: unknown): value is AdaptationResult {
   if (!hasOnlyKeys(result, ["kind", "sourceText", "fragments"])) return false;
   if (typeof result.sourceText !== "string" || !Array.isArray(result.fragments)) return false;
 
-  const sourceFragments = splitIntoFragments(result.sourceText);
-  if (result.fragments.length !== sourceFragments.length) return false;
-
-  return result.fragments.every((value, index) => {
+  let sourceCursor = 0;
+  for (let index = 0; index < result.fragments.length; index += 1) {
+    const value = result.fragments[index];
     if (!value || typeof value !== "object" || Array.isArray(value)) return false;
     const fragment = value as Record<string, unknown>;
     if (!hasOnlyKeys(fragment, ["id", "text", "translation", "explanation"])) return false;
-    if (fragment.id !== sourceFragments[index].id || fragment.text !== sourceFragments[index].text) return false;
+    if (fragment.id !== `fragment-${index + 1}`) return false;
+    if (typeof fragment.text !== "string" || !fragment.text) return false;
+
+    const fragmentStart = result.sourceText.indexOf(fragment.text, sourceCursor);
+    if (
+      fragmentStart < 0
+      || /\S/u.test(result.sourceText.slice(sourceCursor, fragmentStart))
+    ) {
+      return false;
+    }
+    sourceCursor = fragmentStart + fragment.text.length;
+
     if (!isBoundedString(fragment.translation, MAX_TRANSLATION_LENGTH)) return false;
-    return isBoundedString(fragment.explanation, MAX_EXPLANATION_LENGTH, true);
-  });
+    if (!isBoundedString(fragment.explanation, MAX_EXPLANATION_LENGTH, true)) return false;
+  }
+
+  return !/\S/u.test(result.sourceText.slice(sourceCursor));
 }

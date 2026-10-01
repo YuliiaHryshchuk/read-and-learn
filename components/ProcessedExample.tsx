@@ -15,6 +15,7 @@ type ResultItem = {
 type ProcessedExampleProps = {
   original: string;
   result: ResultItem[];
+  initiallyOpenFirstFragment?: boolean;
 };
 
 function getExplanationItems(explanation: ResultItem["explanation"]) {
@@ -27,8 +28,14 @@ function getExplanationItems(explanation: ResultItem["explanation"]) {
     : Object.entries(explanation).map(([term, meaning]) => ({ term, meaning }));
 }
 
-export default function ProcessedExample({ original, result }: ProcessedExampleProps) {
-  const [openFragments, setOpenFragments] = useState<Set<number>>(() => new Set([0]));
+export default function ProcessedExample({
+  original,
+  result,
+  initiallyOpenFirstFragment = true,
+}: ProcessedExampleProps) {
+  const [openFragments, setOpenFragments] = useState<Set<number>>(
+    () => new Set(initiallyOpenFirstFragment ? [0] : []),
+  );
 
   // The six example results correspond to the six sentences in the original.
   const sentences = original

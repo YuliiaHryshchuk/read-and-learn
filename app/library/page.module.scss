@@ -2,3 +2,119 @@
   background: var(--color-canvas);
   color: var(--color-text-strong);
 }
+
+.title {
+  font-size: clamp(27px, 3vw, 34px);
+  color: var(--color-text-heading);
+}
+
+.list {
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  border: 1px solid var(--color-border-warm);
+  border-radius: 11px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.icon {
+  border-radius: 9px;
+  background: var(--color-accent-soft);
+}
+
+.openLink {
+  color: var(--color-accent-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.preview {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface-subtle);
+  overflow-wrap: anywhere;
+}
+
+.previewText {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+
+.loadMore {
+  min-width: 220px;
+  border: 1px solid var(--color-border-warm);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  color: var(--color-text-secondary);
+}
+
+.loadMore:hover:not(:disabled) {
+  border-color: var(--color-accent-border);
+  color: var(--color-accent-text);
+}
+
+.loadMore:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.readerTitle {
+  font-size: clamp(27px, 3vw, 34px);
+  color: var(--color-text-heading);
+  overflow-wrap: anywhere;
+}
+
+.backLink {
+  color: var(--color-accent-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.readerMessage {
+  border: 1px solid var(--color-border-warm);
+  border-radius: 11px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.originalText {
+  overflow: visible;
+  overflow-wrap: anywhere;
+}
+
+.cancelButton {
+  border: 1px solid var(--color-border-control);
+  background: var(--color-surface);
+  color: var(--color-text-strong);
+}
+
+.deleteButton {
+  border: 1px solid var(--color-danger);
+  background: var(--color-danger);
+  color: var(--color-white);
+}
+
+.deleteButton:hover:not(:disabled) {
+  filter: brightness(0.92);
+}
+
+.cancelButton:disabled,
+.deleteButton:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+@media (max-width: 37.5rem) {
+  .previewText {
+    -webkit-line-clamp: 3;
+  }
+
+  .loadMore {
+    width: 100%;
+  }
+}

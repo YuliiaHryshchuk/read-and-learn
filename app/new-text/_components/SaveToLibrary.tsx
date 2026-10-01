@@ -9,13 +9,16 @@ export default function SaveToLibrary() {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const router = useRouter();
   const clearDraft = useTextStore((state) => state.setText);
+  const clearResult = useTextStore((state) => state.clearResult);
+  const editingMaterial = useTextStore((state) => state.editingMaterial);
+  const clearEditingMaterial = useTextStore((state) => state.clearEditingMaterial);
   const result = useTextStore((state) => state.result);
   const [title, setTitle] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
 
   function openDialog() {
-    setTitle("");
+    setTitle(editingMaterial?.title ?? "");
     setMessage("");
     dialogRef.current?.showModal();
   }
@@ -44,20 +47,25 @@ export default function SaveToLibrary() {
         throw new Error("Sign in with Puter before saving a material.");
       }
 
-      const response = await fetch("/api/materials", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${puter.authToken}`,
-          "Content-Type": "application/json",
+      const response = await fetch(
+        editingMaterial
+          ? `/api/materials/${encodeURIComponent(editingMaterial.id)}`
+          : "/api/materials",
+        {
+          method: editingMaterial ? "PUT" : "POST",
+          headers: {
+            Authorization: `Bearer ${puter.authToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title: title.trim(),
+            sourceText: result.sourceText,
+            sourceLanguage: SOURCE_LANGUAGE,
+            targetLanguage: TARGET_LANGUAGE,
+            adaptation: result,
+          }),
         },
-        body: JSON.stringify({
-          title: title.trim(),
-          sourceText: result.sourceText,
-          sourceLanguage: SOURCE_LANGUAGE,
-          targetLanguage: TARGET_LANGUAGE,
-          adaptation: result,
-        }),
-      });
+      );
 
       const payload: unknown = await response.json().catch(() => null);
       if (!response.ok) {
@@ -73,6 +81,8 @@ export default function SaveToLibrary() {
 
       closeDialog();
       clearDraft("");
+      clearResult();
+      clearEditingMaterial();
       router.push("/library");
     } catch (error) {
       setMessage(
@@ -93,7 +103,7 @@ export default function SaveToLibrary() {
           className="button button-primary px-5 py-3 mobile-width-100"
           onClick={openDialog}
         >
-          Save to my library
+          {editingMaterial ? "Save changes" : "Save to my library"}
         </button>
       </div>
 
@@ -109,7 +119,7 @@ export default function SaveToLibrary() {
               id="save-to-library-title"
               className="text-xl font-bold line-heading"
             >
-              Save to my library
+              {editingMaterial ? "Save changes" : "Save to my library"}
             </h2>
             <button
               type="button"
