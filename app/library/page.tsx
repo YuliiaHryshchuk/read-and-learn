@@ -4,7 +4,7 @@ import styles from "./page.module.scss";
 
 export default function LibraryPage() {
   return (
-    <div className={`${styles.page} min-vh-100`}>
+    <div className={styles.page}>
       <Header />
       <main className="page-container pt-6 pb-8 mobile-pt-5">
         <h1 className={`${styles.title} font-serif line-tight`}>My library</h1>

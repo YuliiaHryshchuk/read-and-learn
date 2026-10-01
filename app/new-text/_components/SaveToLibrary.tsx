@@ -2,7 +2,7 @@
 
 import { useRef, useState, type FormEvent, type MouseEvent } from "react";
 import { useRouter } from "next/navigation";
-import { SOURCE_LANGUAGE, TARGET_LANGUAGE } from "@/lib/languages";
+import { SOURCE_LANGUAGE } from "@/lib/languages";
 import { useTextStore } from "@/stores/useTextStore";
 
 export default function SaveToLibrary() {
@@ -13,6 +13,7 @@ export default function SaveToLibrary() {
   const editingMaterial = useTextStore((state) => state.editingMaterial);
   const clearEditingMaterial = useTextStore((state) => state.clearEditingMaterial);
   const result = useTextStore((state) => state.result);
+  const targetLanguage = useTextStore((state) => state.targetLanguage);
   const [title, setTitle] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -61,7 +62,7 @@ export default function SaveToLibrary() {
             title: title.trim(),
             sourceText: result.sourceText,
             sourceLanguage: SOURCE_LANGUAGE,
-            targetLanguage: TARGET_LANGUAGE,
+            targetLanguage: targetLanguage.trim(),
             adaptation: result,
           }),
         },

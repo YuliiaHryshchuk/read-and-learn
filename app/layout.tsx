@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import Footer from "@/components/Footer";
 import "./init.scss";
 import "../styles/theme.scss";
 import "./globals.scss";
@@ -27,7 +28,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body>{children}</body>
+      <body>
+        <div className="site-content">{children}</div>
+        <Footer />
+      </body>
     </html>
   );
 }

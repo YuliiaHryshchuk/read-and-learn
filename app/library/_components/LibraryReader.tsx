@@ -10,6 +10,8 @@ import {
   isAdaptationResult,
   type StructuredAdaptationResult,
 } from "@/lib/adaptation";
+import { MAX_TARGET_LANGUAGE_LENGTH } from "@/lib/languages";
+import { decodeMaterialId, encodeMaterialId } from "@/lib/materialId";
 import { useTextStore } from "@/stores/useTextStore";
 import styles from "../page.module.scss";
 
@@ -17,6 +19,7 @@ type SavedMaterial = {
   id: string;
   title: string;
   sourceText: string;
+  targetLanguage: string;
   adaptation: StructuredAdaptationResult;
 };
 
@@ -31,7 +34,7 @@ function getMaterialId() {
   if (!segment) return null;
 
   try {
-    return decodeURIComponent(segment);
+    return decodeMaterialId(decodeURIComponent(segment));
   } catch {
     return null;
   }
@@ -109,9 +112,10 @@ export default function LibraryReader() {
       id: material.id,
       title: material.title,
       sourceText: material.sourceText,
+      targetLanguage: material.targetLanguage,
       adaptation: material.adaptation,
     });
-    router.push(`/new-text?edit=${encodeURIComponent(material.id)}`);
+    router.push(`/edit/${encodeMaterialId(material.id)}`);
   }
 
   function closeDeleteDialog() {
@@ -283,6 +287,9 @@ function isSavedMaterial(value: unknown): value is SavedMaterial {
   return typeof candidate.id === "string"
     && typeof candidate.title === "string"
     && typeof candidate.sourceText === "string"
+    && typeof candidate.targetLanguage === "string"
+    && Boolean(candidate.targetLanguage.trim())
+    && candidate.targetLanguage.length <= MAX_TARGET_LANGUAGE_LENGTH
     && isAdaptationResult(adaptation)
     && adaptation.kind === "structured"
     && adaptation.sourceText === candidate.sourceText;

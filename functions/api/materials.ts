@@ -1,4 +1,8 @@
-import { isAdaptationResult, type StructuredAdaptationResult } from "../../lib/adaptation";
+import {
+  isAdaptationResult,
+  type StructuredAdaptationResult,
+} from "../../lib/adaptation";
+import { MAX_TARGET_LANGUAGE_LENGTH } from "../../lib/languages";
 import { countWords } from "../../lib/text";
 import {
   PuterAuthenticationError,
@@ -48,7 +52,7 @@ type MaterialListItem = {
 const MAX_REQUEST_BYTES = 250_000;
 const MAX_TITLE_LENGTH = 120;
 const MAX_SOURCE_LENGTH = 3_000;
-const MAX_LANGUAGE_LENGTH = 100;
+const MAX_SOURCE_LANGUAGE_LENGTH = 100;
 const PAGE_SIZE = 10;
 
 function json(data: unknown, status = 200) {
@@ -77,12 +81,16 @@ function authenticationErrorResponse(error: PuterAuthenticationError) {
 }
 
 function isBoundedText(value: unknown, maxLength: number): value is string {
-  return typeof value === "string"
-    && value.trim().length > 0
-    && value.length <= maxLength;
+  return (
+    typeof value === "string" &&
+    value.trim().length > 0 &&
+    value.length <= maxLength
+  );
 }
 
-export function parseCreateMaterialBody(value: unknown): CreateMaterialBody | null {
+export function parseCreateMaterialBody(
+  value: unknown,
+): CreateMaterialBody | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const body = value as Record<string, unknown>;
   const expectedKeys = [
@@ -93,15 +101,17 @@ export function parseCreateMaterialBody(value: unknown): CreateMaterialBody | nu
     "adaptation",
   ];
   if (
-    Object.keys(body).length !== expectedKeys.length
-    || !expectedKeys.every((key) => Object.hasOwn(body, key))
+    Object.keys(body).length !== expectedKeys.length ||
+    !expectedKeys.every((key) => Object.hasOwn(body, key))
   ) {
     return null;
   }
   if (!isBoundedText(body.title, MAX_TITLE_LENGTH)) return null;
   if (!isBoundedText(body.sourceText, MAX_SOURCE_LENGTH)) return null;
-  if (!isBoundedText(body.sourceLanguage, MAX_LANGUAGE_LENGTH)) return null;
-  if (!isBoundedText(body.targetLanguage, MAX_LANGUAGE_LENGTH)) return null;
+  if (!isBoundedText(body.sourceLanguage, MAX_SOURCE_LANGUAGE_LENGTH))
+    return null;
+  if (!isBoundedText(body.targetLanguage, MAX_TARGET_LANGUAGE_LENGTH))
+    return null;
   if (!isAdaptationResult(body.adaptation)) return null;
   if (body.adaptation.kind !== "structured") return null;
   if (body.adaptation.sourceText !== body.sourceText) return null;
@@ -144,7 +154,8 @@ export async function onRequestPost({ request, env }: FunctionContext) {
     }
 
     const id = crypto.randomUUID();
-    const material = await env.DB.prepare(`
+    const material = await env.DB.prepare(
+      `
       INSERT INTO materials (
         id,
         owner_uuid,
@@ -160,7 +171,8 @@ export async function onRequestPost({ request, env }: FunctionContext) {
         title,
         created_at AS createdAt,
         updated_at AS updatedAt
-    `)
+    `,
+    )
       .bind(
         id,
         user.uuid,
@@ -217,13 +229,15 @@ export async function onRequestGet({ request, env }: FunctionContext) {
       return invalidRequest("The library offset is invalid.");
     }
 
-    const { results } = await env.DB.prepare(`
+    const { results } = await env.DB.prepare(
+      `
       SELECT id, title, source_text AS preview
       FROM materials
       WHERE owner_uuid = ?
       ORDER BY updated_at DESC, id DESC
       LIMIT ? OFFSET ?
-    `)
+    `,
+    )
       .bind(user.uuid, PAGE_SIZE + 1, offset)
       .all<MaterialListItem>();
 

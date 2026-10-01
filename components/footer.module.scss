@@ -1,0 +1,17 @@
+.footer {
+  flex: none;
+  margin-top: var(--space-5);
+  padding: 0 var(--space-4) var(--space-5);
+  color: var(--color-text-muted);
+}
+
+.link {
+  color: var(--color-accent-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.link:hover,
+.link:focus-visible {
+  color: var(--color-accent-strong);
+}

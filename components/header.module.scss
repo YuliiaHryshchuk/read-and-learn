@@ -11,7 +11,21 @@
   color: var(--color-text-strong);
 }
 
-.header nav a:hover,
-.header nav a:focus-visible {
+.navLink {
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 3px;
+  text-underline-offset: 4px;
+  transition:
+    color 150ms ease,
+    text-decoration-color 150ms ease;
+}
+
+.navLink:hover,
+.navLink:focus-visible {
   color: var(--color-accent);
+}
+
+.navLink[aria-current="page"] {
+  text-decoration-color: var(--color-accent);
 }

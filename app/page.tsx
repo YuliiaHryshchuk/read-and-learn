@@ -125,17 +125,21 @@ const result: { translation: string; explanation: Record<string, string> }[] = [
 
 export default function Home() {
   return (
-    <div className={`${styles.page} min-vh-100`}>
+    <div className={styles.page}>
       <Header />
       <main className="page-container pt-7 mobile-pt-6">
         <h1 className={`${styles.introTitle} font-sans font-bold line-heading`}>
           Welcome to Read and study
         </h1>
-        <p className={`${styles.introText} mt-1 font-sans font-bold line-compact`}>
+        <p
+          className={`${styles.introText} mt-1 font-sans font-bold line-compact`}
+        >
           Add a text in Spanish and get translations and explanations to help
           you learn.
         </p>
-        <h2 className={`${styles.exampleTitle} mt-7 mb-2 font-serif line-tight`}>
+        <h2
+          className={`${styles.exampleTitle} mt-7 mb-2 font-serif line-tight`}
+        >
           Example
         </h2>
 
@@ -145,7 +149,10 @@ export default function Home() {
           }
           title="Your text"
           actions={[
-            <span className="text-muted text-md white-space-nowrap mobile-text-xs" key="word-limit">
+            <span
+              className="text-muted text-md white-space-nowrap mobile-text-xs"
+              key="word-limit"
+            >
               Up to 300 words
             </span>,
           ]}

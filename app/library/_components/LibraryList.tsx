@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { encodeMaterialId } from "@/lib/materialId";
 import styles from "../page.module.scss";
 
 type MaterialListItem = {
@@ -91,23 +92,31 @@ export default function LibraryList() {
           <li className={`${styles.card} p-3`} key={material.id}>
             <header className="d-flex align-items-center justify-content-between gap-4 mb-3 mobile-gap-2">
               <div className="d-flex align-items-center gap-3 min-width-0">
-                <span className={`${styles.icon} d-grid place-items-center flex-none size-7`}>
-                  <Image src="/icons/document.svg" width={20} height={20} alt="" />
+                <span
+                  className={`${styles.icon} d-grid place-items-center flex-none size-7`}
+                >
+                  <Image
+                    src="/icons/document.svg"
+                    width={20}
+                    height={20}
+                    alt=""
+                  />
                 </span>
                 <h2 className="min-width-0 text-xl font-bold line-heading">
                   {material.title}
                 </h2>
               </div>
               <a
-                className={`${styles.openLink} d-inline-flex align-items-center gap-2 flex-none text-md font-semibold`}
-                href={`/library/${encodeURIComponent(material.id)}`}
+                className={`${styles.openLink} d-inline-flex align-items-center flex-none text-md`}
+                href={`/library/${encodeMaterialId(material.id)}`}
               >
-                <Image src="/icons/open.svg" width={18} height={18} alt="" />
-                <span className="mobile-d-none">Open for reading</span>
-                <span className="visually-hidden mobile-d-block">Open {material.title} for reading</span>
+                Open for reading
               </a>
             </header>
-            <p className={`${styles.preview} p-3 text-default text-md line-body`} lang="es">
+            <p
+              className={`${styles.preview} p-3 text-default text-md line-body`}
+              lang="es"
+            >
               <span className={styles.previewText}>{material.preview}</span>
             </p>
           </li>
@@ -154,23 +163,32 @@ async function fetchMaterials(offset: number): Promise<MaterialListPayload> {
     );
   }
 
-  const candidate = payload && typeof payload === "object"
-    ? payload as { materials?: unknown; hasMore?: unknown }
-    : null;
-  if (!candidate || !Array.isArray(candidate.materials) || typeof candidate.hasMore !== "boolean") {
+  const candidate =
+    payload && typeof payload === "object"
+      ? (payload as { materials?: unknown; hasMore?: unknown })
+      : null;
+  if (
+    !candidate ||
+    !Array.isArray(candidate.materials) ||
+    typeof candidate.hasMore !== "boolean"
+  ) {
     throw new Error("The library returned an invalid response.");
   }
 
   const materials = candidate.materials.filter(
-    (item): item is MaterialListItem => Boolean(
-      item
-      && typeof item === "object"
-      && typeof (item as MaterialListItem).id === "string"
-      && typeof (item as MaterialListItem).title === "string"
-      && typeof (item as MaterialListItem).preview === "string",
-    ),
+    (item): item is MaterialListItem =>
+      Boolean(
+        item &&
+        typeof item === "object" &&
+        typeof (item as MaterialListItem).id === "string" &&
+        typeof (item as MaterialListItem).title === "string" &&
+        typeof (item as MaterialListItem).preview === "string",
+      ),
   );
-  if (materials.length !== candidate.materials.length || materials.length > PAGE_SIZE) {
+  if (
+    materials.length !== candidate.materials.length ||
+    materials.length > PAGE_SIZE
+  ) {
     throw new Error("The library returned an invalid response.");
   }
 

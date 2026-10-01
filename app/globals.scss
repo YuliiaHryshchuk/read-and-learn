@@ -20,6 +20,13 @@ body {
   overflow-x: hidden;
 }
 
+.site-content {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
 body {
   min-height: 100%;
   display: flex;

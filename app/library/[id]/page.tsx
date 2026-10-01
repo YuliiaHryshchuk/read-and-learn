@@ -13,7 +13,7 @@ export const dynamicParams = false;
 
 export default function SavedMaterialPage() {
   return (
-    <div className={`${styles.page} min-vh-100`}>
+    <div className={styles.page}>
       <Header />
       <main className="page-container pt-6 pb-8 mobile-pt-5">
         <LibraryReader />
