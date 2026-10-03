@@ -1,6 +1,6 @@
 # Study Reader
 
-Learn Spanish from adapted texts using Ilya Frank's reading method.
+Learn languages through adapted texts, translations, and focused explanations.
 
 ## Run locally with Docker
 

@@ -1,4 +1,4 @@
-export const SOURCE_LANGUAGE = "Spanish";
+export const SOURCE_LANGUAGE = "Unspecified";
 export const TARGET_LANGUAGE = "English";
 export const MAX_TARGET_LANGUAGE_LENGTH = 20;
 

@@ -1,13 +1,7 @@
 :root {
   --background: var(--color-canvas);
   --foreground: var(--color-text-strong);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: var(--color-neutral-950);
-    --foreground: var(--color-neutral-100);
-  }
+  color-scheme: light;
 }
 
 html {
@@ -58,7 +52,9 @@ a {
   font-weight: var(--weight-semibold);
   line-height: var(--line-tight);
   cursor: pointer;
-  transition: background-color 150ms ease, border-color 150ms ease,
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
     color 150ms ease;
 }
 
@@ -139,10 +135,4 @@ a {
   border-radius: 14px;
   background: var(--color-surface-warm);
   box-shadow: var(--shadow-raised);
-}
-
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
 }

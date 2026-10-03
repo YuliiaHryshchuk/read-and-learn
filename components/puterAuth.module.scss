@@ -1,8 +1,15 @@
 .auth {
+  position: relative;
   border: 1px solid var(--color-border-warm);
   border-radius: 14px;
   background: var(--color-surface-warm);
   box-shadow: var(--shadow-raised);
+}
+
+.copy {
+  position: relative;
+  min-width: 0;
+  flex: 1;
 }
 
 .auth h2 {
@@ -14,11 +21,77 @@
   color: var(--color-text-secondary);
 }
 
+.puterLink {
+  color: var(--color-accent-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.puterLink:hover {
+  color: var(--color-accent-strong);
+}
+
+.puterLink:focus-visible,
+.infoButton:focus-visible {
+  outline: 3px solid var(--focus-accent);
+  outline-offset: 3px;
+}
+
+.infoWrap {
+  display: inline-flex;
+  vertical-align: text-bottom;
+}
+
+.infoButton {
+  display: inline-grid;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  place-items: center;
+  border: 2px solid currentcolor;
+  border-radius: 50%;
+  color: var(--color-text-secondary);
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.infoButton:hover,
+.infoButton[aria-expanded="true"] {
+  color: var(--color-accent-strong);
+  background: var(--color-accent-soft);
+}
+
+.infoPanel {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  right: 0;
+  margin-inline: auto;
+  display: block;
+  width: min(430px, 100%);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border-warm);
+  border-radius: 9px;
+  color: var(--color-text);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-raised);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
 .primaryButton,
 .secondaryButton {
   border-radius: 9px;
   font: inherit;
-  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
 }
 
 .primaryButton {
@@ -51,4 +124,14 @@
 .secondaryButton:focus-visible {
   outline: 3px solid var(--focus-accent);
   outline-offset: 3px;
+}
+
+@media (max-width: 37.5rem) {
+  .copy {
+    width: 100%;
+  }
+
+  .infoPanel {
+    width: 100%;
+  }
 }

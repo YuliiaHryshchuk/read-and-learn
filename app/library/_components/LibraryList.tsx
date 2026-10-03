@@ -2,29 +2,16 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { usePuterAuth } from "@/components/PuterAuthProvider";
+import {
+  listMaterials,
+  type MaterialListItem,
+} from "@/lib/api/materialsClient";
 import { encodeMaterialId } from "@/lib/materialId";
 import styles from "../page.module.scss";
 
-type MaterialListItem = {
-  id: string;
-  title: string;
-  preview: string;
-};
-
-type MaterialListPayload = {
-  materials: MaterialListItem[];
-  hasMore: boolean;
-};
-
-const PAGE_SIZE = 10;
-
-function getResponseError(payload: unknown) {
-  if (!payload || typeof payload !== "object") return null;
-  const message = (payload as { error?: { message?: unknown } }).error?.message;
-  return typeof message === "string" ? message : null;
-}
-
 export default function LibraryList() {
+  const { requireAuthToken } = usePuterAuth();
   const [materials, setMaterials] = useState<MaterialListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -36,7 +23,8 @@ export default function LibraryList() {
 
     async function loadMaterials() {
       try {
-        const payload = await fetchMaterials(0);
+        const authToken = await requireAuthToken();
+        const payload = await listMaterials(authToken, 0);
 
         if (isCurrent) {
           setMaterials(payload.materials);
@@ -59,7 +47,7 @@ export default function LibraryList() {
     return () => {
       isCurrent = false;
     };
-  }, []);
+  }, [requireAuthToken]);
 
   async function loadMore() {
     if (isLoadingMore || !hasMore) return;
@@ -67,7 +55,8 @@ export default function LibraryList() {
     setIsLoadingMore(true);
     setMessage("");
     try {
-      const payload = await fetchMaterials(materials.length);
+      const authToken = await requireAuthToken();
+      const payload = await listMaterials(authToken, materials.length);
       setMaterials((current) => [...current, ...payload.materials]);
       setHasMore(payload.hasMore);
     } catch (error) {
@@ -115,7 +104,6 @@ export default function LibraryList() {
             </header>
             <p
               className={`${styles.preview} p-3 text-default text-md line-body`}
-              lang="es"
             >
               <span className={styles.previewText}>{material.preview}</span>
             </p>
@@ -143,54 +131,4 @@ export default function LibraryList() {
       )}
     </>
   );
-}
-
-async function fetchMaterials(offset: number): Promise<MaterialListPayload> {
-  const { puter } = await import("@heyputer/puter.js");
-  if (!puter.auth.isSignedIn() || !puter.authToken) {
-    throw new Error("Log in with Puter to view your library.");
-  }
-
-  const response = await fetch(`/api/materials?offset=${offset}`, {
-    headers: {
-      Authorization: `Bearer ${puter.authToken}`,
-    },
-  });
-  const payload: unknown = await response.json().catch(() => null);
-  if (!response.ok) {
-    throw new Error(
-      getResponseError(payload) ?? "The library could not be loaded.",
-    );
-  }
-
-  const candidate =
-    payload && typeof payload === "object"
-      ? (payload as { materials?: unknown; hasMore?: unknown })
-      : null;
-  if (
-    !candidate ||
-    !Array.isArray(candidate.materials) ||
-    typeof candidate.hasMore !== "boolean"
-  ) {
-    throw new Error("The library returned an invalid response.");
-  }
-
-  const materials = candidate.materials.filter(
-    (item): item is MaterialListItem =>
-      Boolean(
-        item &&
-        typeof item === "object" &&
-        typeof (item as MaterialListItem).id === "string" &&
-        typeof (item as MaterialListItem).title === "string" &&
-        typeof (item as MaterialListItem).preview === "string",
-      ),
-  );
-  if (
-    materials.length !== candidate.materials.length ||
-    materials.length > PAGE_SIZE
-  ) {
-    throw new Error("The library returned an invalid response.");
-  }
-
-  return { materials, hasMore: candidate.hasMore };
 }

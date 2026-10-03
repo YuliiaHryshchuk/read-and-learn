@@ -22,7 +22,7 @@ export default function Header() {
         <Link
           className={`${styles.brand} d-inline-flex align-items-center gap-2 text-2xl font-bold white-space-nowrap mobile-text-lg`}
           href="/"
-          aria-label="Read and study home"
+          aria-label="Read & Learn home"
         >
           <Image
             className="flex-none size-6"
@@ -31,7 +31,7 @@ export default function Header() {
             height={29}
             alt=""
           />
-          <span>Read and study</span>
+          <span>Read &amp; Learn</span>
         </Link>
         <nav
           className="d-flex align-items-center gap-5 text-body font-semibold white-space-nowrap mobile-gap-3 mobile-text-sm"

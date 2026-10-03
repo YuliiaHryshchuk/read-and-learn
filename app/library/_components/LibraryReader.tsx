@@ -4,30 +4,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { useRouter } from "next/navigation";
+import { usePuterAuth } from "@/components/PuterAuthProvider";
 import ProcessedExample from "@/components/ProcessedExample";
 import TextContainer from "@/components/TextContainer";
 import {
-  isAdaptationResult,
-  type StructuredAdaptationResult,
-} from "@/lib/adaptation";
-import { MAX_TARGET_LANGUAGE_LENGTH } from "@/lib/languages";
+  deleteMaterial as deleteSavedMaterial,
+  getMaterial,
+  type SavedMaterial,
+} from "@/lib/api/materialsClient";
 import { decodeMaterialId, encodeMaterialId } from "@/lib/materialId";
 import { useTextStore } from "@/stores/useTextStore";
 import styles from "../page.module.scss";
-
-type SavedMaterial = {
-  id: string;
-  title: string;
-  sourceText: string;
-  targetLanguage: string;
-  adaptation: StructuredAdaptationResult;
-};
-
-function getResponseError(payload: unknown) {
-  if (!payload || typeof payload !== "object") return null;
-  const message = (payload as { error?: { message?: unknown } }).error?.message;
-  return typeof message === "string" ? message : null;
-}
 
 function getMaterialId() {
   const segment = window.location.pathname.split("/").filter(Boolean).at(-1);
@@ -42,6 +29,7 @@ function getMaterialId() {
 
 export default function LibraryReader() {
   const router = useRouter();
+  const { requireAuthToken } = usePuterAuth();
   const startEditingMaterial = useTextStore((state) => state.startEditingMaterial);
   const deleteDialogRef = useRef<HTMLDialogElement>(null);
   const [material, setMaterial] = useState<SavedMaterial | null>(null);
@@ -57,29 +45,8 @@ export default function LibraryReader() {
         const id = getMaterialId();
         if (!id) throw new Error("The material URL is invalid.");
 
-        const { puter } = await import("@heyputer/puter.js");
-        if (!puter.auth.isSignedIn() || !puter.authToken) {
-          throw new Error("Log in with Puter to read this material.");
-        }
-
-        const response = await fetch(`/api/materials/${encodeURIComponent(id)}`, {
-          headers: {
-            Authorization: `Bearer ${puter.authToken}`,
-          },
-        });
-        const payload: unknown = await response.json().catch(() => null);
-        if (!response.ok) {
-          throw new Error(
-            getResponseError(payload) ?? "The material could not be loaded.",
-          );
-        }
-
-        const loaded = payload && typeof payload === "object"
-          ? (payload as { material?: unknown }).material
-          : null;
-        if (!isSavedMaterial(loaded)) {
-          throw new Error("The material returned an invalid response.");
-        }
+        const authToken = await requireAuthToken();
+        const loaded = await getMaterial(authToken, id);
 
         if (isCurrent) setMaterial(loaded);
       } catch (error) {
@@ -99,7 +66,7 @@ export default function LibraryReader() {
     return () => {
       isCurrent = false;
     };
-  }, []);
+  }, [requireAuthToken]);
 
   function openDeleteDialog() {
     setMessage("");
@@ -132,26 +99,8 @@ export default function LibraryReader() {
     setIsDeleting(true);
     setMessage("");
     try {
-      const { puter } = await import("@heyputer/puter.js");
-      if (!puter.auth.isSignedIn() || !puter.authToken) {
-        throw new Error("Log in with Puter before deleting this material.");
-      }
-
-      const response = await fetch(
-        `/api/materials/${encodeURIComponent(material.id)}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${puter.authToken}`,
-          },
-        },
-      );
-      if (!response.ok) {
-        const payload: unknown = await response.json().catch(() => null);
-        throw new Error(
-          getResponseError(payload) ?? "The material could not be deleted.",
-        );
-      }
+      const authToken = await requireAuthToken();
+      await deleteSavedMaterial(authToken, material.id);
 
       deleteDialogRef.current?.close();
       router.push("/library");
@@ -207,17 +156,12 @@ export default function LibraryReader() {
           </button>,
         ]}
       >
-        <p lang="es">{material.sourceText}</p>
+        <p>{material.sourceText}</p>
       </TextContainer>
 
       <ProcessedExample
-        original={material.sourceText}
         initiallyOpenFirstFragment={false}
-        result={material.adaptation.fragments.map((fragment) => ({
-          text: fragment.text,
-          translation: fragment.translation,
-          explanation: fragment.explanation,
-        }))}
+        result={material.adaptation.fragments}
       />
 
       <dialog
@@ -278,19 +222,4 @@ export default function LibraryReader() {
       </dialog>
     </>
   );
-}
-
-function isSavedMaterial(value: unknown): value is SavedMaterial {
-  if (!value || typeof value !== "object") return false;
-  const candidate = value as Record<string, unknown>;
-  const adaptation = candidate.adaptation;
-  return typeof candidate.id === "string"
-    && typeof candidate.title === "string"
-    && typeof candidate.sourceText === "string"
-    && typeof candidate.targetLanguage === "string"
-    && Boolean(candidate.targetLanguage.trim())
-    && candidate.targetLanguage.length <= MAX_TARGET_LANGUAGE_LENGTH
-    && isAdaptationResult(adaptation)
-    && adaptation.kind === "structured"
-    && adaptation.sourceText === candidate.sourceText;
 }

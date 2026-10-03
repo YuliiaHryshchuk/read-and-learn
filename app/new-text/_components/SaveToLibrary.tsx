@@ -2,12 +2,15 @@
 
 import { useRef, useState, type FormEvent, type MouseEvent } from "react";
 import { useRouter } from "next/navigation";
+import { usePuterAuth } from "@/components/PuterAuthProvider";
+import { saveMaterial } from "@/lib/api/materialsClient";
 import { SOURCE_LANGUAGE } from "@/lib/languages";
 import { useTextStore } from "@/stores/useTextStore";
 
 export default function SaveToLibrary() {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const router = useRouter();
+  const { requireAuthToken } = usePuterAuth();
   const clearDraft = useTextStore((state) => state.setText);
   const clearResult = useTextStore((state) => state.clearResult);
   const editingMaterial = useTextStore((state) => state.editingMaterial);
@@ -40,45 +43,19 @@ export default function SaveToLibrary() {
     setMessage("");
 
     try {
-      const { puter } = await import("@heyputer/puter.js");
-      if (!puter.auth.isSignedIn()) {
-        await puter.auth.signIn();
-      }
-      if (!puter.authToken) {
-        throw new Error("Sign in with Puter before saving a material.");
-      }
+      const authToken = await requireAuthToken();
 
-      const response = await fetch(
-        editingMaterial
-          ? `/api/materials/${encodeURIComponent(editingMaterial.id)}`
-          : "/api/materials",
+      await saveMaterial(
+        authToken,
         {
-          method: editingMaterial ? "PUT" : "POST",
-          headers: {
-            Authorization: `Bearer ${puter.authToken}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            title: title.trim(),
-            sourceText: result.sourceText,
-            sourceLanguage: SOURCE_LANGUAGE,
-            targetLanguage: targetLanguage.trim(),
-            adaptation: result,
-          }),
+          title: title.trim(),
+          sourceText: result.sourceText,
+          sourceLanguage: SOURCE_LANGUAGE,
+          targetLanguage: targetLanguage.trim(),
+          adaptation: result,
         },
+        editingMaterial?.id,
       );
-
-      const payload: unknown = await response.json().catch(() => null);
-      if (!response.ok) {
-        const errorMessage = payload && typeof payload === "object"
-          ? (payload as { error?: { message?: unknown } }).error?.message
-          : undefined;
-        throw new Error(
-          typeof errorMessage === "string"
-            ? errorMessage
-            : "The material could not be saved.",
-        );
-      }
 
       closeDialog();
       clearDraft("");

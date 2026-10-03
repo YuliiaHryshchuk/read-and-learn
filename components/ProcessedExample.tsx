@@ -2,47 +2,25 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { parseExplanationItems } from "@/lib/adaptation";
+import {
+  parseExplanationItems,
+  type AdaptedFragment,
+} from "@/lib/adaptation";
 import Fragment from "./Fragment";
 import TextContainer from "./TextContainer";
 
-type ResultItem = {
-  text?: string;
-  translation: string;
-  explanation: string | Record<string, string> | Array<{ term: string; meaning: string }>;
-};
-
 type ProcessedExampleProps = {
-  original: string;
-  result: ResultItem[];
+  result: readonly AdaptedFragment[];
   initiallyOpenFirstFragment?: boolean;
 };
 
-function getExplanationItems(explanation: ResultItem["explanation"]) {
-  if (typeof explanation === "string") {
-    return parseExplanationItems(explanation);
-  }
-
-  return Array.isArray(explanation)
-    ? explanation
-    : Object.entries(explanation).map(([term, meaning]) => ({ term, meaning }));
-}
-
 export default function ProcessedExample({
-  original,
   result,
   initiallyOpenFirstFragment = true,
 }: ProcessedExampleProps) {
   const [openFragments, setOpenFragments] = useState<Set<number>>(
     () => new Set(initiallyOpenFirstFragment ? [0] : []),
   );
-
-  // The six example results correspond to the six sentences in the original.
-  const sentences = original
-    .replace(/\s+/g, " ")
-    .trim()
-    .match(/[^.!?]+[.!?]+/g)
-    ?.map((sentence) => sentence.trim()) ?? [];
 
   function setFragmentOpen(index: number, isOpen: boolean) {
     setOpenFragments((current) => {
@@ -75,13 +53,13 @@ export default function ProcessedExample({
     >
       {result.map((item, index) => (
         <Fragment
-          key={index}
+          key={item.id}
           number={index + 1}
-          text={item.text ?? sentences[index] ?? ""}
+          text={item.text}
           translation={item.translation}
           explanation={
             <div>
-              {getExplanationItems(item.explanation).map(
+              {parseExplanationItems(item.explanation).map(
                 ({ term, meaning }, explanationIndex) => (
                   <p key={`${term}-${explanationIndex}`}>
                     {term ? (

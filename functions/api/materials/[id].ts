@@ -1,34 +1,22 @@
 import {
-  isAdaptationResult,
-  type StructuredAdaptationResult,
+  decodeStoredAdaptation,
+  serializeStoredAdaptation,
 } from "../../../lib/adaptation";
 import {
   PuterAuthenticationError,
   requirePuterUser,
 } from "../../../lib/server/puterAuth";
+import type { FunctionContext } from "../../_shared/cloudflare";
 import {
-  parseCreateMaterialBody,
-  type CreateMaterialBody,
-} from "../materials";
-
-type D1Value = string | number | null;
-
-type D1PreparedStatement = {
-  bind: (...values: D1Value[]) => D1PreparedStatement;
-  first: <T>() => Promise<T | null>;
-};
-
-type FunctionContext = {
-  request: Request;
-  env: {
-    DB: {
-      prepare: (query: string) => D1PreparedStatement;
-    };
-  };
-  params: {
-    id: string;
-  };
-};
+  authenticationErrorResponse,
+  errorResponse,
+  invalidRequest,
+  jsonResponse,
+} from "../../_shared/http";
+import {
+  MAX_MATERIAL_REQUEST_BYTES,
+  parseMaterialBody,
+} from "../../_shared/materialValidation";
 
 type StoredMaterial = {
   id: string;
@@ -48,33 +36,16 @@ type UpdatedMaterial = {
   updatedAt: string;
 };
 
-const MAX_REQUEST_BYTES = 250_000;
-
-function json(data: unknown, status = 200) {
-  return Response.json(data, {
-    status,
-    headers: {
-      "Cache-Control": "no-store",
-    },
-  });
-}
-
-function authenticationErrorResponse(error: PuterAuthenticationError) {
-  return json(
-    { error: { code: error.code, message: error.message } },
-    error.status,
-  );
-}
-
-export async function onRequestGet({ request, env, params }: FunctionContext) {
+export async function onRequestGet({
+  request,
+  env,
+  params,
+}: FunctionContext<{ id: string }>) {
   try {
     const user = await requirePuterUser(request);
     const id = params.id;
     if (!id || id.length > 100) {
-      return json(
-        { error: { code: "not_found", message: "The material was not found." } },
-        404,
-      );
+      return errorResponse("not_found", "The material was not found.", 404);
     }
 
     const stored = await env.DB.prepare(`
@@ -94,32 +65,26 @@ export async function onRequestGet({ request, env, params }: FunctionContext) {
       .first<StoredMaterial>();
 
     if (!stored) {
-      return json(
-        { error: { code: "not_found", message: "The material was not found." } },
-        404,
-      );
+      return errorResponse("not_found", "The material was not found.", 404);
     }
 
-    let adaptation: unknown;
+    let storedAdaptation: unknown;
     try {
-      adaptation = JSON.parse(stored.adaptationJson);
+      storedAdaptation = JSON.parse(stored.adaptationJson);
     } catch {
-      adaptation = null;
+      storedAdaptation = null;
     }
+
+    const adaptation = decodeStoredAdaptation(storedAdaptation);
 
     if (
-      !isAdaptationResult(adaptation)
-      || adaptation.kind !== "structured"
+      !adaptation
       || adaptation.sourceText !== stored.sourceText
     ) {
       console.error("Stored material has an invalid adaptation.", stored.id);
-      return json(
-        {
-          error: {
-            code: "invalid_material",
-            message: "The saved material could not be read.",
-          },
-        },
+      return errorResponse(
+        "invalid_material",
+        "The saved material could not be read.",
         500,
       );
     }
@@ -130,38 +95,31 @@ export async function onRequestGet({ request, env, params }: FunctionContext) {
       sourceText: stored.sourceText,
       sourceLanguage: stored.sourceLanguage,
       targetLanguage: stored.targetLanguage,
-      adaptation: adaptation as StructuredAdaptationResult,
+      adaptation,
       createdAt: stored.createdAt,
       updatedAt: stored.updatedAt,
     };
 
-    return json({ material });
+    return jsonResponse({ material });
   } catch (error) {
     if (error instanceof PuterAuthenticationError) {
       return authenticationErrorResponse(error);
     }
 
     console.error("Failed to load material.", error);
-    return json(
-      {
-        error: {
-          code: "load_failed",
-          message: "The material could not be loaded.",
-        },
-      },
-      500,
-    );
+    return errorResponse("load_failed", "The material could not be loaded.", 500);
   }
 }
-export async function onRequestDelete({ request, env, params }: FunctionContext) {
+export async function onRequestDelete({
+  request,
+  env,
+  params,
+}: FunctionContext<{ id: string }>) {
   try {
     const user = await requirePuterUser(request);
     const id = params.id;
     if (!id || id.length > 100) {
-      return json(
-        { error: { code: "not_found", message: "The material was not found." } },
-        404,
-      );
+      return errorResponse("not_found", "The material was not found.", 404);
     }
 
     const deleted = await env.DB.prepare(`
@@ -173,10 +131,7 @@ export async function onRequestDelete({ request, env, params }: FunctionContext)
       .first<{ id: string }>();
 
     if (!deleted) {
-      return json(
-        { error: { code: "not_found", message: "The material was not found." } },
-        404,
-      );
+      return errorResponse("not_found", "The material was not found.", 404);
     }
 
     return new Response(null, {
@@ -191,61 +146,45 @@ export async function onRequestDelete({ request, env, params }: FunctionContext)
     }
 
     console.error("Failed to delete material.", error);
-    return json(
-      {
-        error: {
-          code: "delete_failed",
-          message: "The material could not be deleted.",
-        },
-      },
-      500,
-    );
+    return errorResponse("delete_failed", "The material could not be deleted.", 500);
   }
 }
 
-export async function onRequestPut({ request, env, params }: FunctionContext) {
+export async function onRequestPut({
+  request,
+  env,
+  params,
+}: FunctionContext<{ id: string }>) {
   try {
     const contentLength = Number(request.headers.get("Content-Length"));
-    if (Number.isFinite(contentLength) && contentLength > MAX_REQUEST_BYTES) {
-      return json(
-        { error: { code: "invalid_request", message: "The material is too large to save." } },
-        400,
-      );
+    if (
+      Number.isFinite(contentLength)
+      && contentLength > MAX_MATERIAL_REQUEST_BYTES
+    ) {
+      return invalidRequest("The material is too large to save.");
     }
 
     const user = await requirePuterUser(request);
     const id = params.id;
     if (!id || id.length > 100) {
-      return json(
-        { error: { code: "not_found", message: "The material was not found." } },
-        404,
-      );
+      return errorResponse("not_found", "The material was not found.", 404);
     }
 
     let bodyValue: unknown;
     try {
       bodyValue = await request.json();
     } catch {
-      return json(
-        { error: { code: "invalid_request", message: "The request body must be valid JSON." } },
-        400,
-      );
+      return invalidRequest("The request body must be valid JSON.");
     }
 
-    const body: CreateMaterialBody | null = parseCreateMaterialBody(bodyValue);
+    const body = parseMaterialBody(bodyValue);
     if (!body) {
-      return json(
-        { error: { code: "invalid_request", message: "The material data is incomplete or invalid." } },
-        400,
-      );
+      return invalidRequest("The material data is incomplete or invalid.");
     }
 
-    const adaptationJson = JSON.stringify(body.adaptation);
-    if (adaptationJson.length > MAX_REQUEST_BYTES) {
-      return json(
-        { error: { code: "invalid_request", message: "The material is too large to save." } },
-        400,
-      );
+    const adaptationJson = serializeStoredAdaptation(body.adaptation);
+    if (adaptationJson.length > MAX_MATERIAL_REQUEST_BYTES) {
+      return invalidRequest("The material is too large to save.");
     }
 
     const material = await env.DB.prepare(`
@@ -276,28 +215,17 @@ export async function onRequestPut({ request, env, params }: FunctionContext) {
       .first<UpdatedMaterial>();
 
     if (!material) {
-      return json(
-        { error: { code: "not_found", message: "The material was not found." } },
-        404,
-      );
+      return errorResponse("not_found", "The material was not found.", 404);
     }
 
-    return json({ material });
+    return jsonResponse({ material });
   } catch (error) {
     if (error instanceof PuterAuthenticationError) {
       return authenticationErrorResponse(error);
     }
 
     console.error("Failed to update material.", error);
-    return json(
-      {
-        error: {
-          code: "update_failed",
-          message: "The material could not be updated.",
-        },
-      },
-      500,
-    );
+    return errorResponse("update_failed", "The material could not be updated.", 500);
   }
 }
 
