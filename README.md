@@ -55,3 +55,19 @@ docker compose down
 ```
 
 Stopping the containers does not delete the local D1 data.
+
+## Tests
+
+The default test suite is fully offline: Puter and HTTP calls are mocked.
+
+```sh
+pnpm test
+pnpm test:coverage
+```
+
+Tests that make real Puter requests must be named `*.puter.test.ts` (or
+`*.puter.test.tsx`). They are excluded from the normal suite and run only with:
+
+```sh
+pnpm test:puter
+```

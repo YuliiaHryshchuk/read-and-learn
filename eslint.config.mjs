@@ -10,6 +10,7 @@ const eslintConfig = defineConfig([
     // Default ignores of eslint-config-next:
     ".next/**",
     ".wrangler/**",
+    "coverage/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
