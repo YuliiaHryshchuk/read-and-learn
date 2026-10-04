@@ -19,7 +19,6 @@ export default function LibraryPage() {
       <Header />
       <main className="page-container pt-6 pb-8 mobile-pt-5">
         <PuterAuth>
-          <h1 className={`${styles.title} font-serif line-tight`}>My library</h1>
           <LibraryList />
         </PuterAuth>
       </main>

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { useRouter } from "next/navigation";
+import LoadingState from "@/components/LoadingState";
 import { usePuterAuth } from "@/components/PuterAuthProvider";
 import ProcessedExample from "@/components/ProcessedExample";
 import TextContainer from "@/components/TextContainer";
@@ -115,7 +116,7 @@ export default function LibraryReader() {
     }
   }
 
-  if (isLoading) return <p>Loading…</p>;
+  if (isLoading) return <LoadingState />;
 
   if (!material) {
     return (

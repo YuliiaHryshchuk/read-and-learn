@@ -247,6 +247,21 @@ export function planIncrementalAdaptation(
   };
 }
 
+export function isAdaptationOutdated(
+  sourceText: string,
+  previousResult: StructuredAdaptationResult,
+) {
+  const plan = planIncrementalAdaptation(sourceText, previousResult);
+  if (plan.fragmentsToProcess.length > 0) return true;
+
+  const previousTokens = tokenize(previousResult.sourceText);
+  const currentTokens = tokenize(sourceText);
+  return previousTokens.length !== currentTokens.length
+    || previousTokens.some(
+      (token, index) => token.value !== currentTokens[index]?.value,
+    );
+}
+
 export function mergeIncrementalAdaptation(
   plan: IncrementalAdaptationPlan,
   processedFragments: AdaptedFragment[],

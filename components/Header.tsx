@@ -3,11 +3,15 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { usePuterAuth } from "@/components/PuterAuthProvider";
+import { useUnsavedGenerationGuard } from "@/components/UnsavedGenerationGuard";
 import { useTextStore } from "@/stores/useTextStore";
 import styles from "./header.module.scss";
 
 export default function Header() {
   const pathname = usePathname();
+  const { status, user, signOut } = usePuterAuth();
+  const { requestLeave } = useUnsavedGenerationGuard();
   const startNewText = useTextStore((state) => state.startNewText);
   const isNewTextActive = pathname === "/new-text"
     || pathname.startsWith("/new-text/");
@@ -56,6 +60,16 @@ export default function Header() {
           >
             My library
           </Link>
+          {user && (
+            <button
+              className={`${styles.navLink} ${styles.logoutButton}`}
+              type="button"
+              disabled={status === "checking"}
+              onClick={() => requestLeave(() => void signOut())}
+            >
+              {status === "checking" ? "Logging out…" : "Log out"}
+            </button>
+          )}
         </nav>
       </div>
     </header>

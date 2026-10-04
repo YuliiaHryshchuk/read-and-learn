@@ -1,7 +1,10 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
+import LoadingState from "@/components/LoadingState";
 import ProcessedExample from "@/components/ProcessedExample";
+import { isAdaptationOutdated } from "@/lib/incrementalAdaptation";
 import { countWords } from "@/lib/text";
 import { useTextStore } from "@/stores/useTextStore";
 import GenerationControls from "./GenerationControls";
@@ -13,7 +16,6 @@ import {
   MAX_TEXT_WORDS,
   useAdaptationGeneration,
 } from "../_hooks/useAdaptationGeneration";
-import { useEditorViewportHeight } from "../_hooks/useEditorViewportHeight";
 import {
   useMaterialEditor,
   type NewTextMode,
@@ -34,10 +36,13 @@ export default function NewTextForm({ mode }: NewTextFormProps) {
   const editingMaterial = useTextStore((state) => state.editingMaterial);
   const hasHydrated = useTextStore((state) => state.hasHydrated);
   const { isLoadingSavedMaterial, materialMessage } = useMaterialEditor(mode);
-  const editorViewportRef = useEditorViewportHeight(mode);
   const wordCount = countWords(text);
   const isOverWordLimit = wordCount > MAX_TEXT_WORDS;
   const effectiveTargetLanguage = targetLanguage.trim();
+  const isExplanationOutdated = useMemo(
+    () => result ? isAdaptationOutdated(text, result) : false,
+    [result, text],
+  );
   const { generate, generationMessage, isPending } = useAdaptationGeneration({
     text,
     result,
@@ -54,9 +59,11 @@ export default function NewTextForm({ mode }: NewTextFormProps) {
     || isOverWordLimit;
   const message = generationMessage ?? materialMessage;
 
+  if (isLoadingSavedMaterial) return <LoadingState />;
+
   return (
     <div className={styles.form}>
-      <div ref={editorViewportRef} className={styles.editorViewport}>
+      <div className={styles.editorViewport}>
         {mode === "edit" && (
           <Link
             className={`${styles.backLink} d-inline-block mb-4 text-sm`}
@@ -103,8 +110,14 @@ export default function NewTextForm({ mode }: NewTextFormProps) {
 
       {result && (
         <>
+          {isExplanationOutdated && (
+            <p className="mt-5 text-muted text-sm line-compact" role="status">
+              *Explanation is outdated
+            </p>
+          )}
           <ProcessedExample
             key={`${result.sourceText}:${resultLanguage ?? "unknown"}`}
+            className={isExplanationOutdated ? "mt-2" : undefined}
             result={result.fragments}
           />
           {result.sourceText === text

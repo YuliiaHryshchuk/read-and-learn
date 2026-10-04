@@ -84,8 +84,7 @@
   line-height: 1.5;
 }
 
-.primaryButton,
-.secondaryButton {
+.primaryButton {
   border-radius: 9px;
   font: inherit;
   transition:
@@ -109,19 +108,7 @@
   opacity: 0.65;
 }
 
-.secondaryButton {
-  border: 1px solid var(--color-border-strong);
-  color: var(--color-text);
-  background: var(--color-surface);
-}
-
-.secondaryButton:hover {
-  border-color: var(--color-control-border-hover);
-  background: var(--color-surface-muted);
-}
-
-.primaryButton:focus-visible,
-.secondaryButton:focus-visible {
+.primaryButton:focus-visible {
   outline: 3px solid var(--focus-accent);
   outline-offset: 3px;
 }

@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import LoadingState from "@/components/LoadingState";
 import { usePuterAuth } from "@/components/PuterAuthProvider";
 import {
   listMaterials,
@@ -70,48 +71,58 @@ export default function LibraryList() {
     }
   }
 
-  if (isLoading) return <p>Loading…</p>;
-  if (message && materials.length === 0) return <p role="alert">{message}</p>;
-  if (materials.length === 0) return <p>Your library is empty.</p>;
+  if (isLoading) return <LoadingState />;
 
   return (
     <>
-      <ul className={`${styles.list} d-grid gap-3 mt-5`}>
-        {materials.map((material) => (
-          <li className={`${styles.card} p-3`} key={material.id}>
-            <header className="d-flex align-items-center justify-content-between gap-4 mb-3 mobile-gap-2">
-              <div className="d-flex align-items-center gap-3 min-width-0">
-                <span
-                  className={`${styles.icon} d-grid place-items-center flex-none size-7`}
-                >
-                  <Image
-                    src="/icons/document.svg"
-                    width={20}
-                    height={20}
-                    alt=""
-                  />
-                </span>
-                <h2 className="min-width-0 text-xl font-bold line-heading">
-                  {material.title}
-                </h2>
-              </div>
-              <a
-                className={`${styles.openLink} d-inline-flex align-items-center flex-none text-md`}
-                href={`/library/${encodeMaterialId(material.id)}`}
-              >
-                Open for reading
-              </a>
-            </header>
-            <p
-              className={`${styles.preview} p-3 text-default text-md line-body`}
-            >
-              <span className={styles.previewText}>{material.preview}</span>
-            </p>
-          </li>
-        ))}
-      </ul>
+      <h1 className={`${styles.title} font-serif line-tight`}>My library</h1>
 
-      {message && (
+      {message && materials.length === 0 && (
+        <p className="mt-5" role="alert">{message}</p>
+      )}
+
+      {!message && materials.length === 0 && (
+        <p className="mt-5">Your library is empty.</p>
+      )}
+
+      {materials.length > 0 && (
+        <ul className={`${styles.list} d-grid gap-3 mt-5`}>
+          {materials.map((material) => (
+            <li className={`${styles.card} p-3`} key={material.id}>
+              <header className="d-flex align-items-center justify-content-between gap-4 mb-3 mobile-gap-2">
+                <div className="d-flex align-items-center gap-3 min-width-0">
+                  <span
+                    className={`${styles.icon} d-grid place-items-center flex-none size-7`}
+                  >
+                    <Image
+                      src="/icons/document.svg"
+                      width={20}
+                      height={20}
+                      alt=""
+                    />
+                  </span>
+                  <h2 className="min-width-0 text-xl font-bold line-heading">
+                    {material.title}
+                  </h2>
+                </div>
+                <a
+                  className={`${styles.openLink} d-inline-flex align-items-center flex-none text-md`}
+                  href={`/library/${encodeMaterialId(material.id)}`}
+                >
+                  Open for reading
+                </a>
+              </header>
+              <p
+                className={`${styles.preview} p-3 text-default text-md line-body`}
+              >
+                <span className={styles.previewText}>{material.preview}</span>
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {message && materials.length > 0 && (
         <p className="mt-3 text-danger text-sm text-center" role="alert">
           {message}
         </p>

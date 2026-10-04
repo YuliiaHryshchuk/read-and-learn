@@ -29,3 +29,17 @@
 .navLink[aria-current="page"] {
   text-decoration-color: var(--color-accent);
 }
+
+.logoutButton {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.logoutButton:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}

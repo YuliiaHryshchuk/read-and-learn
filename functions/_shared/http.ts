@@ -5,6 +5,7 @@ export function jsonResponse(data: unknown, status = 200) {
     status,
     headers: {
       "Cache-Control": "no-store",
+      "X-Content-Type-Options": "nosniff",
     },
   });
 }

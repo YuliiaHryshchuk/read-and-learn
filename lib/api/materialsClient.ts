@@ -4,6 +4,7 @@ import {
 } from "@/lib/adaptation";
 import { requestApi } from "@/lib/api/client";
 import { MAX_TARGET_LANGUAGE_LENGTH } from "@/lib/languages";
+import { MATERIAL_PREVIEW_MAX_LENGTH } from "@/lib/materials";
 
 export type MaterialListItem = {
   id: string;
@@ -73,6 +74,7 @@ export async function getMaterial(authToken: string, id: string) {
     `/api/materials/${encodeURIComponent(id)}`,
     {
       headers: authorizationHeaders(authToken),
+      cache: "no-store",
       fallbackError: "The material could not be loaded.",
     },
   );
@@ -117,7 +119,8 @@ function isMaterialListItem(value: unknown): value is MaterialListItem {
   return isRecord(value)
     && typeof value.id === "string"
     && typeof value.title === "string"
-    && typeof value.preview === "string";
+    && typeof value.preview === "string"
+    && Array.from(value.preview).length <= MATERIAL_PREVIEW_MAX_LENGTH;
 }
 
 function isSavedMaterial(value: unknown): value is SavedMaterial {

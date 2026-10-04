@@ -28,7 +28,7 @@
 
 Сохранение готовых материалов в личную библиотеку остаётся целью проекта, но не входит в текущий этап работ.
 
-## 2. Сценарий MVP
+## 2. Сценарий MVP - Done
 
 1. Пользователь открывает страницу обработки текста.
 2. Вставляет испанский текст в текстовое поле и запускает адаптацию.
@@ -265,16 +265,16 @@ docker compose up --build
 10. Вынести общий API client/error parser.+
 11. Вынести shared Cloudflare Function helpers.+
     Этап 3 — UX и производительность
-12. Debounce local persistence.
-13. Добавить outdated-result state.
-14. Улучшить empty/loading/error/success states.
-15. Сократить library preview payload.
-16. Заменить JS-измерение высоты на CSS layout.
-17. Провести Lighthouse/mobile/axe audit.
+12. Debounce local persistence.+
+13. Добавить outdated-result state.+
+14. Улучшить empty/loading/error/success states. // todo
+15. Сократить library preview payload.+
+16. Заменить JS-измерение высоты на CSS layout.+
+17. Провести Lighthouse/mobile/axe audit.// to research
     Этап 4 — масштабирование
 18. Cursor pagination.
 19. Расширенный D1 index после EXPLAIN QUERY PLAN.
 20. Rate limits и quotas.
 21. SWR, если появятся дополнительные запросы и cache invalidation.
 22. Privacy-conscious Web Vitals/error monitoring.
-23. Security headers и строгая CSP.
+23. Security headers и строгая CSP. // to research

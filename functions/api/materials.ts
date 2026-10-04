@@ -2,6 +2,10 @@ import {
   serializeStoredAdaptation,
 } from "../../lib/adaptation";
 import {
+  formatMaterialPreview,
+  MATERIAL_PREVIEW_LENGTH,
+} from "../../lib/materials";
+import {
   PuterAuthenticationError,
   requirePuterUser,
 } from "../../lib/server/puterAuth";
@@ -28,6 +32,10 @@ type MaterialListItem = {
   id: string;
   title: string;
   preview: string;
+};
+
+type MaterialListRow = MaterialListItem & {
+  isTruncated: number;
 };
 
 const PAGE_SIZE = 10;
@@ -120,18 +128,37 @@ export async function onRequestGet({ request, env }: FunctionContext) {
 
     const { results } = await env.DB.prepare(
       `
-      SELECT id, title, source_text AS preview
+      SELECT
+        id,
+        title,
+        substr(source_text, 1, ?) AS preview,
+        length(source_text) > ? AS isTruncated
       FROM materials
       WHERE owner_uuid = ?
       ORDER BY updated_at DESC, id DESC
       LIMIT ? OFFSET ?
     `,
     )
-      .bind(user.uuid, PAGE_SIZE + 1, offset)
-      .all<MaterialListItem>();
+      .bind(
+        MATERIAL_PREVIEW_LENGTH,
+        MATERIAL_PREVIEW_LENGTH,
+        user.uuid,
+        PAGE_SIZE + 1,
+        offset,
+      )
+      .all<MaterialListRow>();
+
+    const materials = results.slice(0, PAGE_SIZE).map((material) => ({
+      id: material.id,
+      title: material.title,
+      preview: formatMaterialPreview(
+        material.preview,
+        Boolean(material.isTruncated),
+      ),
+    }));
 
     return jsonResponse({
-      materials: results.slice(0, PAGE_SIZE),
+      materials,
       hasMore: results.length > PAGE_SIZE,
     });
   } catch (error) {

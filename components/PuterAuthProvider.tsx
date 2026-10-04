@@ -30,7 +30,7 @@ type PuterAuthContextValue = {
   status: PuterAuthStatus;
   user: PuterUser | null;
   error: string;
-  signIn: () => Promise<void>;
+  signIn: () => Promise<boolean>;
   signOut: () => Promise<void>;
   requireAuthToken: () => Promise<string>;
 };
@@ -100,7 +100,7 @@ export function PuterAuthProvider({ children }: { children: ReactNode }) {
   }, [activateAuthenticatedUser]);
 
   const signIn = useCallback(async () => {
-    if (status === "checking") return;
+    if (status === "checking") return false;
 
     setStatus("checking");
     setError("");
@@ -109,10 +109,12 @@ export function PuterAuthProvider({ children }: { children: ReactNode }) {
       await puter.auth.signIn();
       const currentUser = await puter.auth.getUser();
       await activateAuthenticatedUser(currentUser);
+      return true;
     } catch (signInError) {
       setUser(null);
       setError(getErrorMessage(signInError));
       setStatus("signedOut");
+      return false;
     }
   }, [activateAuthenticatedUser, status]);
 

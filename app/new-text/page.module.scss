@@ -1,20 +1,26 @@
 .page {
+  display: flex;
   flex: 1;
+  flex-direction: column;
   background: var(--color-canvas);
   color: var(--color-text-strong);
 }
 
 .main {
-  min-height: auto;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
 }
 
 .form {
-  min-height: 0;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
 }
 
 .editorViewport {
   display: flex;
-  height: var(--editor-viewport-height, auto);
+  flex: 1;
   min-height: 320px;
   flex-direction: column;
 }
@@ -300,7 +306,18 @@
 
 @media (max-width: 37.5rem) {
   .languageSelector {
+    position: relative;
     flex-wrap: wrap;
+  }
+
+  .languageMenu {
+    position: static;
+  }
+
+  .languageMenuPanel {
+    right: auto;
+    left: 0;
+    width: 100%;
   }
 
   .languageSummary span:first-child {

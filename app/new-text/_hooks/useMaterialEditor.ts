@@ -26,7 +26,9 @@ export function useMaterialEditor(mode: NewTextMode) {
     (state) => state.startEditingMaterial,
   );
   const startNewText = useTextStore((state) => state.startNewText);
-  const [isLoadingSavedMaterial, setIsLoadingSavedMaterial] = useState(false);
+  const [isLoadingSavedMaterial, setIsLoadingSavedMaterial] = useState(
+    mode === "edit",
+  );
   const [materialMessage, setMaterialMessage] = useState("");
 
   useEffect(() => {
@@ -37,24 +39,30 @@ export function useMaterialEditor(mode: NewTextMode) {
       return;
     }
 
-    const editingMaterialId = getEditingMaterialId();
-    if (!editingMaterialId) return;
-
-    if (
-      currentDraft.editingMaterial?.id === editingMaterialId
-      && currentDraft.result?.kind === "structured"
-      && currentDraft.text === currentDraft.result.sourceText
-    ) {
-      return;
-    }
-
     let isCurrent = true;
     async function loadSavedMaterial() {
-      setIsLoadingSavedMaterial(true);
+      const editingMaterialId = getEditingMaterialId();
+      if (!editingMaterialId) {
+        if (isCurrent) {
+          setMaterialMessage("The material URL is invalid.");
+          setIsLoadingSavedMaterial(false);
+        }
+        return;
+      }
+
+      if (
+        currentDraft.editingMaterial?.id === editingMaterialId
+        && currentDraft.result?.kind === "structured"
+        && currentDraft.text === currentDraft.result.sourceText
+      ) {
+        if (isCurrent) setIsLoadingSavedMaterial(false);
+        return;
+      }
+
       setMaterialMessage("");
       try {
         const authToken = await requireAuthToken();
-        const material = await getMaterial(authToken, editingMaterialId!);
+        const material = await getMaterial(authToken, editingMaterialId);
         if (material.id !== editingMaterialId) {
           throw new Error("The material returned an invalid response.");
         }

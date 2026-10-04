@@ -75,7 +75,7 @@ export default function Home() {
 
         <ProcessedExample result={result.fragments} />
 
-        <PuterAuth />
+        <PuterAuth redirectAfterSignIn="/new-text" />
       </main>
     </div>
   );

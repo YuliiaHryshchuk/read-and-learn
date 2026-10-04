@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import Footer from "@/components/Footer";
 import { PuterAuthProvider } from "@/components/PuterAuthProvider";
+import { UnsavedGenerationGuard } from "@/components/UnsavedGenerationGuard";
 import "./init.scss";
 import "../styles/theme.scss";
 import "./globals.scss";
@@ -63,8 +64,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>
         <PuterAuthProvider>
-          <div className="site-content">{children}</div>
-          <Footer />
+          <UnsavedGenerationGuard>
+            <div className="site-content">{children}</div>
+            <Footer />
+          </UnsavedGenerationGuard>
         </PuterAuthProvider>
       </body>
     </html>

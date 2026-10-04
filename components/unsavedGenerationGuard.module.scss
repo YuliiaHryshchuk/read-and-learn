@@ -1,0 +1,10 @@
+.returnButton {
+  border: 1px solid var(--color-border-control);
+  background: var(--color-surface);
+  color: var(--color-text-strong);
+}
+
+.returnButton:hover {
+  border-color: var(--color-accent-border);
+  background: var(--color-surface-muted);
+}

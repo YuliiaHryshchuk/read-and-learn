@@ -12,11 +12,13 @@ import TextContainer from "./TextContainer";
 type ProcessedExampleProps = {
   result: readonly AdaptedFragment[];
   initiallyOpenFirstFragment?: boolean;
+  className?: string;
 };
 
 export default function ProcessedExample({
   result,
   initiallyOpenFirstFragment = true,
+  className = "mt-5",
 }: ProcessedExampleProps) {
   const [openFragments, setOpenFragments] = useState<Set<number>>(
     () => new Set(initiallyOpenFirstFragment ? [0] : []),
@@ -33,7 +35,7 @@ export default function ProcessedExample({
 
   return (
     <TextContainer
-      className="mt-5 min-width-0"
+      className={`${className} min-width-0`}
       contentClassName="d-grid gap-2 min-width-0 min-height-0 p-0 bg-transparent"
       icon={<Image src="/icons/document.svg" width={22} height={22} alt="" />}
       title="Processed text"
