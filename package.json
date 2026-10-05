@@ -13,6 +13,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:puter": "vitest run --config vitest.puter.config.mts --passWithNoTests",
+    "hooks:install": "git config core.hooksPath .githooks",
     "db:migrate:local": "wrangler d1 migrations apply DB --local",
     "db:migrations:local": "wrangler d1 migrations list DB --local"
   },

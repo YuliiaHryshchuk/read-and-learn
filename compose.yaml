@@ -1,3 +1,5 @@
+name: read-and-learn
+
 services:
   web:
     build: .

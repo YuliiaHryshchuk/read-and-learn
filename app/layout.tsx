@@ -40,9 +40,6 @@ export const metadata: Metadata = {
   ],
   category: "education",
   manifest: "/manifest.webmanifest",
-  icons: {
-    icon: "/favicon.ico",
-  },
   openGraph: {
     type: "website",
     locale: "en_US",

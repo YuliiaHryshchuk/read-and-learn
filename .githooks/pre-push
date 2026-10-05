@@ -1,0 +1,17 @@
+#!/bin/sh
+
+protected_ref="refs/heads/main"
+
+while read -r local_ref local_oid remote_ref remote_oid; do
+  if [ "$remote_ref" = "$protected_ref" ]; then
+    cat >&2 <<'EOF'
+Direct pushes to main are blocked by this repository's local pre-push hook.
+
+Push a feature branch and merge it through a GitHub pull request instead.
+Use --no-verify only for a deliberate emergency bypass.
+EOF
+    exit 1
+  fi
+done
+
+exit 0
