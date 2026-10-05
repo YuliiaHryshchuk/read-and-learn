@@ -71,3 +71,16 @@ Tests that make real Puter requests must be named `*.puter.test.ts` (or
 ```sh
 pnpm test:puter
 ```
+
+## Git workflow
+
+Install the repository's local Git hooks after cloning:
+
+```sh
+pnpm hooks:install
+```
+
+The pre-push hook blocks direct pushes to `main`. Push a feature branch and
+merge it through a GitHub pull request instead. Git hooks are a local safeguard
+and can be bypassed with `git push --no-verify` when an emergency override is
+deliberately required.
