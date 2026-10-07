@@ -1,18 +1,22 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import Fragment from "./Fragment";
 import TextContainer from "./TextContainer";
 import GenerationControls from "@/app/new-text/_components/GenerationControls";
 import LanguageSelector from "@/app/new-text/_components/LanguageSelector";
+import SourceTextEditor from "@/app/new-text/_components/SourceTextEditor";
 
 vi.mock("next/image", () => ({
   default: ({ src }: { src: string }) => <span data-image-src={src} />,
 }));
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 
 describe("TextContainer", () => {
   it("renders optional metadata and hides content on request", () => {
@@ -54,8 +58,9 @@ describe("Fragment", () => {
     expect(screen.queryByText("Hello world.")).toBeNull();
     await user.click(screen.getByRole("button", { name: "Show translation" }));
     expect(screen.getByText("Hello world.")).toBeTruthy();
-    await user.click(screen.getByRole("button", { name: "Collapse explanation" }));
-    expect(screen.queryByText("hola — hello")).toBeNull();
+    const explanationToggle = screen.getByRole("button", { name: "Collapse explanation" });
+    await user.click(explanationToggle);
+    expect(explanationToggle.getAttribute("aria-expanded")).toBe("false");
     await user.click(screen.getByRole("button", { name: "Collapse fragment 1" }));
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
@@ -152,5 +157,71 @@ describe("LanguageSelector", () => {
     const event = new MouseEvent("click", { bubbles: true, cancelable: true });
     summary.dispatchEvent(event);
     expect(event.defaultPrevented).toBe(true);
+  });
+
+  it("opens the mobile language dialog and selects a language", async () => {
+    const addEventListener = vi.fn();
+    const removeEventListener = vi.fn();
+    vi.stubGlobal("matchMedia", vi.fn().mockReturnValue({
+      matches: false,
+      addEventListener,
+      removeEventListener,
+    }));
+    HTMLDialogElement.prototype.showModal = function showModal() {
+      this.setAttribute("open", "");
+    };
+    HTMLDialogElement.prototype.close = function close() {
+      this.removeAttribute("open");
+    };
+
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<LanguageSelector value="English" disabled={false} onChange={onChange} />);
+
+    await user.click(screen.getByRole("button", {
+      name: "Choose explanation language: English",
+    }));
+    const dialog = screen.getByRole("dialog", { name: "Explanation language" });
+    await user.click(within(dialog).getByRole("button", { name: "Spanish" }));
+
+    expect(onChange).toHaveBeenCalledWith("Spanish");
+    expect(screen.queryByRole("dialog", { name: "Explanation language" })).toBeNull();
+    expect(addEventListener).toHaveBeenCalledWith("change", expect.any(Function));
+    expect(removeEventListener).toHaveBeenCalledWith("change", expect.any(Function));
+  });
+});
+
+describe("SourceTextEditor", () => {
+  it("focuses the text area once it becomes available on mobile", () => {
+    vi.stubGlobal("matchMedia", vi.fn().mockReturnValue({ matches: true }));
+    const { rerender } = render(
+      <SourceTextEditor
+        mode="create"
+        text=""
+        wordCount={0}
+        maxWords={300}
+        maxCharacters={3_000}
+        isOverWordLimit={false}
+        disabled
+        onChange={vi.fn()}
+      />,
+    );
+
+    const textarea = screen.getByRole("textbox", { name: "Type your text" });
+    expect(document.activeElement).not.toBe(textarea);
+
+    rerender(
+      <SourceTextEditor
+        mode="create"
+        text=""
+        wordCount={0}
+        maxWords={300}
+        maxCharacters={3_000}
+        isOverWordLimit={false}
+        disabled={false}
+        onChange={vi.fn()}
+      />,
+    );
+    expect(document.activeElement).toBe(textarea);
   });
 });

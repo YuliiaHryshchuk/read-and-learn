@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect, useRef } from "react";
 import TextContainer from "@/components/TextContainer";
 import type { NewTextMode } from "../_hooks/useMaterialEditor";
 import styles from "../page.module.scss";
@@ -28,6 +29,18 @@ export default function SourceTextEditor({
   disabled,
   onChange,
 }: SourceTextEditorProps) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const hasAppliedInitialFocus = useRef(false);
+
+  useEffect(() => {
+    if (disabled || hasAppliedInitialFocus.current) return;
+
+    hasAppliedInitialFocus.current = true;
+    if (!window.matchMedia("(max-width: 719.98px)").matches) return;
+
+    textareaRef.current?.focus({ preventScroll: true });
+  }, [disabled]);
+
   return (
     <TextContainer
       className={styles.editorCard}
@@ -54,6 +67,7 @@ export default function SourceTextEditor({
       ]}
     >
       <textarea
+        ref={textareaRef}
         id="source-text"
         name="sourceText"
         className={`${styles.textarea} d-block width-100 p-4 text-xl line-body`}

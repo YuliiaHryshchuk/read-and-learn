@@ -1,0 +1,22 @@
+.bulkToggleIcon {
+  flex: none;
+  transition: transform 150ms ease;
+}
+
+.bulkToggleIconOpen {
+  transform: rotate(180deg);
+}
+
+.mobileDescription {
+  display: none;
+}
+
+@media (max-width: 719.98px) {
+  .desktopDescription {
+    display: none;
+  }
+
+  .mobileDescription {
+    display: inline;
+  }
+}

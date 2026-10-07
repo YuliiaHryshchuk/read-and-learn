@@ -134,8 +134,15 @@ export default function LibraryReader() {
     <>
       <div className="d-flex align-items-center justify-content-between gap-4 mobile-flex-column mobile-align-items-stretch">
         <div className="min-width-0">
-          <Link className={`${styles.backLink} text-sm`} href="/library">
-            ← My library
+          <Link className={`${styles.backLink} ${styles.backButton} text-sm`} href="/library">
+            <Image
+              className={styles.backChevron}
+              src="/icons/chevron-down.svg"
+              width={16}
+              height={16}
+              alt=""
+            />
+            <span>My library</span>
           </Link>
           <h1 className={`${styles.readerTitle} mt-2 font-serif line-tight`}>
             {material.title}

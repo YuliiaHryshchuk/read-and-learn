@@ -40,6 +40,10 @@
   cursor: pointer;
 }
 
+.mobileActions {
+  display: none !important;
+}
+
 .content {
   min-height: 150px;
   border: 1px solid var(--color-border);
@@ -57,4 +61,54 @@
 .plain .content {
   border: 0;
   border-radius: 0;
+}
+
+@media (max-width: 719.98px) {
+  .hideIconOnMobile .icon {
+    display: none !important;
+  }
+
+  .mobileFlowHeader.mobileFlowHeader {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    column-gap: var(--space-2) !important;
+    row-gap: var(--space-2) !important;
+    align-items: center !important;
+  }
+
+  .mobileFlowHeader .meta {
+    display: contents;
+  }
+
+  .mobileFlowHeader .icon {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .mobileFlowHeader .title {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .mobileFlowHeader .description {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .mobileFlowHeader .actions,
+  .mobileFlowHeader .mobileActions {
+    grid-column: 3;
+    grid-row: 1;
+    align-self: center;
+    justify-self: end;
+    margin-left: 0 !important;
+  }
+
+  .mobileFlowHeader.hasMobileActions .actions {
+    display: none !important;
+  }
+
+  .mobileFlowHeader .mobileActions {
+    display: flex !important;
+  }
 }

@@ -22,7 +22,7 @@ export default function Header() {
 
   return (
     <header className={`${styles.header} width-100`}>
-      <div className={`${styles.inner} page-container d-flex align-items-center justify-content-between gap-5 mobile-flex-wrap mobile-gap-3 mobile-py-3`}>
+      <div className={`${styles.inner} page-container d-flex align-items-center justify-content-between gap-5`}>
         <Link
           className={`${styles.brand} d-inline-flex align-items-center gap-2 text-2xl font-bold white-space-nowrap mobile-text-lg`}
           href="/"
@@ -37,29 +37,31 @@ export default function Header() {
           />
           <span>Read &amp; Learn</span>
         </Link>
-        <nav
-          className="d-flex align-items-center gap-5 text-body font-semibold white-space-nowrap mobile-gap-3 mobile-text-sm"
-          aria-label="Main navigation"
-        >
-          <Link
-            className={styles.navLink}
-            href="/new-text"
-            aria-current={isNewTextActive ? "page" : undefined}
-            onClick={() => {
-              if (useTextStore.getState().editingMaterial) {
-                startNewText();
-              }
-            }}
+        <div className={`${styles.actions} d-flex align-items-center gap-5`}>
+          <nav
+            className={`${styles.nav} d-flex align-items-center gap-5 text-body font-semibold white-space-nowrap`}
+            aria-label="Main navigation"
           >
-            New text
-          </Link>
-          <Link
-            className={styles.navLink}
-            href="/library"
-            aria-current={isLibraryActive ? "page" : undefined}
-          >
-            My library
-          </Link>
+            <Link
+              className={styles.navLink}
+              href="/new-text"
+              aria-current={isNewTextActive ? "page" : undefined}
+              onClick={() => {
+                if (useTextStore.getState().editingMaterial) {
+                  startNewText();
+                }
+              }}
+            >
+              New text
+            </Link>
+            <Link
+              className={styles.navLink}
+              href="/library"
+              aria-current={isLibraryActive ? "page" : undefined}
+            >
+              My library
+            </Link>
+          </nav>
           {user && (
             <button
               className={`${styles.navLink} ${styles.logoutButton}`}
@@ -70,7 +72,7 @@ export default function Header() {
               {status === "checking" ? "Logging out…" : "Log out"}
             </button>
           )}
-        </nav>
+        </div>
       </div>
     </header>
   );
