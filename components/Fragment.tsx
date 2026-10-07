@@ -41,7 +41,7 @@ export default function Fragment({
           onClick={() => onOpenChange(!isOpen)}
         >
           <span
-            className={`${styles.number} d-grid place-items-center flex-none size-6 text-body font-bold`}
+            className={`${styles.number} text-body font-bold`}
             aria-hidden="true"
           >
             {number}
@@ -54,11 +54,11 @@ export default function Fragment({
             alt=""
           />
           {isOpen ? (
-            <span className={`${styles.text} min-width-0 m-0 py-2 text-lg line-body mobile-text-md`}>
+            <span className={`${styles.text} min-width-0 text-lg line-body mobile-text-md`}>
               {text}
             </span>
           ) : (
-            <span className={`${styles.previewButton} d-block min-width-0 overflow-hidden py-2 text-md line-compact text-left white-space-nowrap text-ellipsis`}>
+            <span className={`${styles.previewButton} min-width-0 overflow-hidden text-md line-compact text-left white-space-nowrap text-ellipsis`}>
               {text}
             </span>
           )}

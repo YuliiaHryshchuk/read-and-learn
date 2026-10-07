@@ -22,7 +22,7 @@ export default function Header() {
 
   return (
     <header className={`${styles.header} width-100`}>
-      <div className={`${styles.inner} page-container d-flex align-items-center justify-content-between gap-5`}>
+      <div className={`${styles.inner} page-container`}>
         <Link
           className={`${styles.brand} d-inline-flex align-items-center gap-2 text-2xl font-bold white-space-nowrap mobile-text-lg`}
           href="/"
@@ -37,9 +37,9 @@ export default function Header() {
           />
           <span>Read &amp; Learn</span>
         </Link>
-        <div className={`${styles.actions} d-flex align-items-center gap-5`}>
+        <div className={styles.actions}>
           <nav
-            className={`${styles.nav} d-flex align-items-center gap-5 text-body font-semibold white-space-nowrap`}
+            className={`${styles.nav} text-body font-semibold white-space-nowrap`}
             aria-label="Main navigation"
           >
             <Link

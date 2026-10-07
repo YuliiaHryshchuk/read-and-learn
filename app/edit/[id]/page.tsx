@@ -27,7 +27,7 @@ export default function EditMaterialPage() {
     <div className={styles.page}>
       <Header />
       <main
-        className={`${styles.main} ${styles.editMain} page-container pt-5 pb-8`}
+        className={`${styles.main} ${styles.editMain} page-container pb-8`}
       >
         <PuterAuth>
           <NewTextForm mode="edit" />

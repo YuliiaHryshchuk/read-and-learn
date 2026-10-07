@@ -76,10 +76,14 @@
 }
 
 .backButton {
-  display: inline-flex !important;
+  display: inline-flex;
   min-height: 44px;
   align-items: center;
   gap: var(--space-1);
+}
+
+.readerMain {
+  padding-top: var(--space-5);
 }
 
 .backChevron {
@@ -134,7 +138,7 @@
 
 @media (max-width: 719.98px) {
   .readerMain {
-    padding-top: var(--space-2) !important;
+    padding-top: var(--space-2);
   }
 
 }

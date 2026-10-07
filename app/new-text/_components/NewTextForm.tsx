@@ -67,7 +67,7 @@ export default function NewTextForm({ mode }: NewTextFormProps) {
       <div className={styles.editorViewport}>
         {mode === "edit" && (
           <Link
-            className={`${styles.backLink} ${styles.backButton} d-inline-block mb-4 text-sm`}
+            className={`${styles.backLink} ${styles.backButton} mb-4 text-sm`}
             href="/library"
           >
             <Image

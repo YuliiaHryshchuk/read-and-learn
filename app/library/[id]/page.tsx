@@ -26,7 +26,7 @@ export default function SavedMaterialPage() {
   return (
     <div className={styles.page}>
       <Header />
-      <main className={`${styles.readerMain} page-container pt-5 pb-8`}>
+      <main className={`${styles.readerMain} page-container pb-8`}>
         <PuterAuth>
           <LibraryReader />
         </PuterAuth>

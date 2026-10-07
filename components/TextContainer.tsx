@@ -47,18 +47,17 @@ export default function TextContainer({
           mobileHeaderLayout === "flow" ? styles.mobileFlowHeader : undefined,
           mobileActions.length > 0 ? styles.hasMobileActions : undefined,
           hideIconOnMobile ? styles.hideIconOnMobile : undefined,
-          "d-flex align-items-center gap-4 mb-2 min-height-7 mobile-flex-wrap mobile-gap-2",
         ]
           .filter(Boolean)
           .join(" ")}
       >
         {icon && (
-          <div className={`${styles.icon} d-grid place-items-center flex-none size-7 mobile-size-6`}>
+          <div className={styles.icon}>
             {icon}
           </div>
         )}
 
-        <div className={`${styles.meta} min-width-0 flex-1`}>
+        <div className={styles.meta}>
           <h2 className={`${styles.title} m-0 text-xl font-bold line-heading mobile-text-lg`}>
             {title}
           </h2>
@@ -70,9 +69,9 @@ export default function TextContainer({
         </div>
 
         {actions.length > 0 && (
-          <div className={`${styles.actions} d-flex align-items-center flex-wrap justify-content-end gap-0 ml-auto`}>
+          <div className={styles.actions}>
             {actions.map((action, index) => (
-              <div className={`${styles.action} d-flex align-items-center`} key={index}>
+              <div className={styles.action} key={index}>
                 {action}
               </div>
             ))}
@@ -80,9 +79,9 @@ export default function TextContainer({
         )}
 
         {mobileActions.length > 0 && (
-          <div className={`${styles.mobileActions} align-items-center flex-wrap justify-content-end gap-0 ml-auto`}>
+          <div className={styles.mobileActions}>
             {mobileActions.map((action, index) => (
-              <div className={`${styles.action} d-flex align-items-center`} key={index}>
+              <div className={styles.action} key={index}>
                 {action}
               </div>
             ))}
