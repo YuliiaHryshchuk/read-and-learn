@@ -17,7 +17,7 @@ export default function LibraryPage() {
   return (
     <div className={styles.page}>
       <Header />
-      <main className="page-container pt-6 pb-8 mobile-pt-5">
+      <main className="page-container pt-6 pb-8">
         <PuterAuth>
           <LibraryList />
         </PuterAuth>

@@ -18,7 +18,7 @@ export default function NewTextPage() {
   return (
     <div className={styles.page}>
       <Header />
-      <main className={`${styles.main} page-container pt-6 pb-8 mobile-pt-5`}>
+      <main className={`${styles.main} page-container pt-5 pb-8`}>
         <PuterAuth>
           <NewTextForm mode="create" />
         </PuterAuth>

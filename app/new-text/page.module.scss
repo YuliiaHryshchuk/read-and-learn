@@ -38,6 +38,23 @@
   text-underline-offset: 2px;
 }
 
+.backButton {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.editMain {
+  padding-top: var(--space-5);
+}
+
+.backChevron {
+  display: block;
+  flex: none;
+  transform: rotate(90deg);
+}
+
 .inputContainer {
   display: flex;
   flex: 1;
@@ -118,6 +135,14 @@
   position: relative;
 }
 
+.mobileLanguageSummary {
+  display: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+}
+
 .languageSummary {
   color: var(--color-accent-text);
   text-decoration: underline;
@@ -173,6 +198,7 @@
 .languageOptions {
   max-height: 230px;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .languageOptions button {
@@ -197,6 +223,59 @@
 .languageOptions button:disabled {
   cursor: wait;
   opacity: 0.65;
+}
+
+.languageDialog {
+  position: fixed;
+  inset: 50% auto auto 50%;
+  width: min(360px, calc(100vw - var(--space-5)));
+  max-height: min(560px, calc(100dvh - var(--space-5)));
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--color-border-warm);
+  border-radius: 12px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-raised);
+  color: var(--color-text-strong);
+  transform: translate(-50%, -50%);
+}
+
+.languageDialog::backdrop {
+  background: rgb(23 40 69 / 38%);
+}
+
+.languageDialogCard {
+  display: flex;
+  max-height: min(560px, calc(100dvh - var(--space-5)));
+  flex-direction: column;
+  padding: var(--space-4);
+  overflow: hidden;
+}
+
+.languageDialogCard .languageOptions {
+  min-height: 0;
+  max-height: min(320px, 45dvh);
+}
+
+.languageDialogClose {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-accent-text);
+  font: inherit;
+  font-size: var(--text-2xl);
+}
+
+.languageDialogClose:hover,
+.languageDialogClose:focus-visible {
+  background: var(--color-accent-soft);
+}
+
+.languageDialogClose:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
 .generate {
@@ -304,20 +383,27 @@
   opacity: 0.65;
 }
 
-@media (max-width: 37.5rem) {
+@media (max-width: 719.98px) {
+  .editMain {
+    padding-top: var(--space-2);
+  }
+
+  .textarea {
+    align-self: stretch;
+    height: auto;
+  }
+
   .languageSelector {
     position: relative;
     flex-wrap: wrap;
   }
 
-  .languageMenu {
-    position: static;
+  .desktopLanguageMenu {
+    display: none;
   }
 
-  .languageMenuPanel {
-    right: auto;
-    left: 0;
-    width: 100%;
+  .mobileLanguageSummary {
+    display: inline-flex;
   }
 
   .languageSummary span:first-child {

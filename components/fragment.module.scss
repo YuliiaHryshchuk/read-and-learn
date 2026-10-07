@@ -1,19 +1,55 @@
 .fragment {
+  display: grid;
+  grid-template-columns: var(--space-6) minmax(0, 1fr);
+  column-gap: var(--space-4);
+  padding: var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: 9px;
   background: var(--color-surface);
   color: var(--color-text-strong);
 }
 
+.fragmentHeader {
+  grid-column: 1 / -1;
+}
+
+.fragmentToggle {
+  display: grid;
+  grid-template-columns: var(--space-6) minmax(0, 1fr) var(--space-6);
+  column-gap: 0;
+  align-items: start;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+  min-height: var(--space-6);
+}
+
 .number {
+  display: grid;
+  grid-column: 1;
+  grid-row: 1;
+  width: var(--space-6);
+  height: var(--space-6);
+  flex: none;
+  place-items: center;
+  margin-top: var(--space-2);
   border-radius: 50%;
   background: var(--color-accent-soft-strong);
   color: var(--color-accent-strong);
 }
 
 .collapseButton {
-  border: 0;
-  background: transparent;
+  grid-column: 3;
+  grid-row: 1;
+  align-self: center;
+  justify-self: end;
+  margin-left: var(--space-3);
   color: var(--color-accent-text);
 }
 
@@ -22,12 +58,16 @@
 }
 
 .previewButton {
-  border: 0;
-  background: transparent;
+  display: block;
+  grid-column: 2;
+  grid-row: 1;
+  margin-left: var(--space-4);
+  padding-block: var(--space-2);
   color: var(--color-text);
 }
 
 .expanded {
+  grid-column: 2;
   grid-template-columns: minmax(0, 1fr);
 }
 
@@ -37,6 +77,13 @@
   background: transparent;
   color: var(--color-text);
   overflow-wrap: anywhere;
+}
+
+.fragmentToggle .text {
+  grid-column: 2;
+  grid-row: 1;
+  margin: 0 0 0 var(--space-4);
+  padding-block: var(--space-2);
 }
 
 .translation {
@@ -60,6 +107,96 @@
   max-height: max(calc(3 * 1.5em + 24px), calc(100dvh - 270px));
 }
 
+.explanationContentCollapsed {
+  display: none;
+}
+
+.mobileExplanationTitle {
+  display: none;
+}
+
 .withTranslation .explanationContent {
   max-height: max(calc(3 * 1.5em + 24px), calc(100dvh - 350px));
+}
+
+@media (max-width: 719.98px) {
+  .fragment {
+    grid-template-columns: minmax(0, 1fr);
+    padding: var(--space-2);
+  }
+
+  .fragmentHeader {
+    grid-column: 1;
+  }
+
+  .fragmentToggle {
+    display: block;
+    min-height: 44px;
+    padding-block: var(--space-2);
+  }
+
+  .number {
+    display: inline-grid;
+    width: var(--space-5);
+    height: var(--space-5);
+    margin: 0 var(--space-2) 0 0;
+    vertical-align: text-top;
+  }
+
+  .collapseButton {
+    float: right;
+    margin: 0 0 0 var(--space-2);
+  }
+
+  .fragmentToggle .text {
+    display: inline;
+    margin-left: 0;
+    padding-block: 0;
+  }
+
+  .previewButton {
+    display: inline-block;
+    max-width: calc(100% - var(--space-7));
+    margin-left: 0;
+    padding-block: 0;
+    vertical-align: middle;
+  }
+
+  .fragmentToggleClosed {
+    display: grid;
+    grid-template-columns: var(--space-5) minmax(0, 1fr) var(--space-6);
+    column-gap: var(--space-2);
+    align-items: center;
+  }
+
+  .fragmentToggleClosed .number,
+  .fragmentToggleClosed .collapseButton {
+    margin: 0;
+  }
+
+  .fragmentToggleClosed .collapseButton {
+    float: none;
+    align-self: center;
+  }
+
+  .fragmentToggleClosed .previewButton {
+    max-width: 100%;
+  }
+
+  .expanded {
+    grid-column: 1;
+  }
+
+  .explanationToggle,
+  .desktopExplanationTitle {
+    display: none;
+  }
+
+  .mobileExplanationTitle {
+    display: inline;
+  }
+
+  .explanationContentCollapsed {
+    display: block;
+  }
 }

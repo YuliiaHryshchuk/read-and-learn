@@ -75,6 +75,23 @@
   text-underline-offset: 2px;
 }
 
+.backButton {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.readerMain {
+  padding-top: var(--space-5);
+}
+
+.backChevron {
+  display: block;
+  flex: none;
+  transform: rotate(90deg);
+}
+
 .readerMessage {
   border: 1px solid var(--color-border-warm);
   border-radius: 11px;
@@ -117,4 +134,11 @@
   .loadMore {
     width: 100%;
   }
+}
+
+@media (max-width: 719.98px) {
+  .readerMain {
+    padding-top: var(--space-2);
+  }
+
 }

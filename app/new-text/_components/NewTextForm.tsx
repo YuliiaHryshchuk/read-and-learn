@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import LoadingState from "@/components/LoadingState";
 import ProcessedExample from "@/components/ProcessedExample";
@@ -66,10 +67,17 @@ export default function NewTextForm({ mode }: NewTextFormProps) {
       <div className={styles.editorViewport}>
         {mode === "edit" && (
           <Link
-            className={`${styles.backLink} d-inline-block mb-4 text-sm`}
+            className={`${styles.backLink} ${styles.backButton} mb-4 text-sm`}
             href="/library"
           >
-            ← My library
+            <Image
+              className={styles.backChevron}
+              src="/icons/chevron-down.svg"
+              width={16}
+              height={16}
+              alt=""
+            />
+            <span>My library</span>
           </Link>
         )}
 
