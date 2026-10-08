@@ -3,6 +3,8 @@ name: Production smoke tests
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - ".github/**"
 
   # Allows the smoke tests to be rerun manually
   workflow_dispatch:
