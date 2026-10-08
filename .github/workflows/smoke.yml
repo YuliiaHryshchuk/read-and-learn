@@ -1,0 +1,44 @@
+name: Production smoke tests
+
+on:
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+
+    env:
+      SITE_URL: ${{ vars.PRODUCTION_URL }}
+
+    steps:
+      - name: Check home page
+        run: |
+          curl --fail --silent --show-error \
+            --retry 5 \
+            --retry-delay 10 \
+            "$SITE_URL/" |
+            grep -q "Welcome to Read &amp; Learn"
+
+      - name: Check new text page
+        run: |
+          curl --fail --silent --show-error \
+            --retry 5 \
+            --retry-delay 10 \
+            "$SITE_URL/new-text" > /dev/null
+
+      - name: Check library page
+        run: |
+          curl --fail --silent --show-error \
+            --retry 5 \
+            --retry-delay 10 \
+            "$SITE_URL/library" > /dev/null
+
+      - name: Check API authentication
+        run: |
+          status=$(curl \
+            --silent \
+            --output /dev/null \
+            --write-out "%{http_code}" \
+            "$SITE_URL/api/materials")
+
+          test "$status" = "401"
