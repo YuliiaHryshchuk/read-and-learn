@@ -48,7 +48,11 @@ jobs:
           api_url="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$CLOUDFLARE_PAGES_PROJECT/deployments?env=production&per_page=20"
 
           for attempt in $(seq 1 12); do
-            echo "Checking deployment for commit $GITHUB_SHA (attempt $attempt/12)..."
+            if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+              echo "Checking the latest successful production deployment..."
+            else
+              echo "Checking deployment for commit $GITHUB_SHA (attempt $attempt/12)..."
+            fi
 
             response=$(curl \
               --fail \
@@ -60,18 +64,37 @@ jobs:
               --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
               "$api_url")
 
-            deployment=$(echo "$response" | jq -c --arg sha "$GITHUB_SHA" '
-              .result
-              | map(
-                  select(
-                    .environment == "production"
-                    and .deployment_trigger.metadata.commit_hash == $sha
+            if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+              deployment=$(echo "$response" | jq -c '
+                .result
+                | map(
+                    select(
+                      .environment == "production"
+                      and .latest_stage.name == "deploy"
+                      and .latest_stage.status == "success"
+                    )
                   )
-                )
-              | first // empty
-            ')
+                | first // empty
+              ')
+            else
+              deployment=$(echo "$response" | jq -c --arg sha "$GITHUB_SHA" '
+                .result
+                | map(
+                    select(
+                      .environment == "production"
+                      and .deployment_trigger.metadata.commit_hash == $sha
+                    )
+                  )
+                | first // empty
+              ')
+            fi
 
             if [ -z "$deployment" ]; then
+              if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+                echo "No successful production deployment was found."
+                exit 1
+              fi
+
               echo "Cloudflare has not registered this deployment yet."
               sleep 60
               continue
