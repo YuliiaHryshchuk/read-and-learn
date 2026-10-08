@@ -9,6 +9,7 @@
     "preview:pages": "wrangler pages dev out --port 3000",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

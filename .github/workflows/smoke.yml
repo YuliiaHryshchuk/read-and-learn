@@ -1,0 +1,175 @@
+name: Production smoke tests
+
+on:
+  push:
+    branches: [main]
+
+  # Allows the smoke tests to be rerun manually
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-smoke
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Wait for Cloudflare deployment
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_PAGES_PROJECT: ${{ vars.CLOUDFLARE_PAGES_PROJECT }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "CLOUDFLARE_API_TOKEN is not configured."
+            exit 1
+          fi
+
+          if [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "CLOUDFLARE_ACCOUNT_ID is not configured."
+            exit 1
+          fi
+
+          if [ -z "$CLOUDFLARE_PAGES_PROJECT" ]; then
+            echo "CLOUDFLARE_PAGES_PROJECT is not configured."
+            exit 1
+          fi
+
+          api_url="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$CLOUDFLARE_PAGES_PROJECT/deployments?env=production&per_page=20"
+
+          for attempt in $(seq 1 12); do
+            echo "Checking deployment for commit $GITHUB_SHA (attempt $attempt/12)..."
+
+            response=$(curl \
+              --fail \
+              --silent \
+              --show-error \
+              --retry 3 \
+              --retry-all-errors \
+              --retry-delay 5 \
+              --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              "$api_url")
+
+            deployment=$(echo "$response" | jq -c --arg sha "$GITHUB_SHA" '
+              .result
+              | map(
+                  select(
+                    .environment == "production"
+                    and .deployment_trigger.metadata.commit_hash == $sha
+                  )
+                )
+              | first // empty
+            ')
+
+            if [ -z "$deployment" ]; then
+              echo "Cloudflare has not registered this deployment yet."
+              sleep 60
+              continue
+            fi
+
+            stage=$(echo "$deployment" | jq -r '.latest_stage.name')
+            status=$(echo "$deployment" | jq -r '.latest_stage.status')
+
+            echo "Cloudflare stage: $stage, status: $status"
+
+            if [ "$stage" = "deploy" ] && [ "$status" = "success" ]; then
+              deployment_url=$(echo "$deployment" | jq -r '.url')
+
+              if [[ "$deployment_url" != http://* && "$deployment_url" != https://* ]]; then
+                deployment_url="https://$deployment_url"
+              fi
+
+              deployment_url="${deployment_url%/}"
+              echo "SITE_URL=$deployment_url" >> "$GITHUB_ENV"
+              echo "Deployment is ready: $deployment_url"
+              exit 0
+            fi
+
+            case "$status" in
+              failure|canceled|skipped)
+                echo "Cloudflare deployment ended with status: $status"
+                exit 1
+                ;;
+            esac
+
+            sleep 60
+          done
+
+          echo "Timed out waiting for the Cloudflare deployment."
+          exit 1
+
+      - name: Check home page
+        run: |
+          curl \
+            --fail \
+            --silent \
+            --show-error \
+            --retry 5 \
+            --retry-all-errors \
+            --retry-delay 5 \
+            --max-time 20 \
+            "$SITE_URL/" |
+            grep -Fq "Welcome to Read &amp; Learn"
+
+      - name: Check public pages
+        run: |
+          curl \
+            --fail \
+            --silent \
+            --show-error \
+            --retry 5 \
+            --retry-all-errors \
+            --retry-delay 5 \
+            --max-time 20 \
+            --output /dev/null \
+            "$SITE_URL/new-text"
+
+          curl \
+            --fail \
+            --silent \
+            --show-error \
+            --retry 5 \
+            --retry-all-errors \
+            --retry-delay 5 \
+            --max-time 20 \
+            --output /dev/null \
+            "$SITE_URL/library"
+
+      - name: Check D1 health
+        run: |
+          response=$(curl \
+            --fail-with-body \
+            --silent \
+            --show-error \
+            --retry 5 \
+            --retry-all-errors \
+            --retry-delay 5 \
+            --max-time 20 \
+            "$SITE_URL/api/health")
+
+          echo "$response" |
+            jq --exit-status \
+              '.status == "ok" and .database == "ok"'
+
+      - name: Check API authentication
+        run: |
+          status=$(curl \
+            --silent \
+            --show-error \
+            --max-time 20 \
+            --output /dev/null \
+            --write-out "%{http_code}" \
+            "$SITE_URL/api/materials")
+
+          if [ "$status" != "401" ]; then
+            echo "Expected /api/materials to return 401, got $status."
+            exit 1
+          fi

@@ -2,16 +2,29 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
 
   "name": "read-and-learn",
+  "pages_build_output_dir": "./out",
   "compatibility_date": "2026-09-25",
 
+  // Production and locals
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "read-and-learn-prod",
       "database_id": "bde4311b-a68e-4d01-8e60-83f7680bbc28",
-
-      // Required for local Pages development.
       "preview_database_id": "DB",
     },
   ],
+
+  // Preview deployments
+  "env": {
+    "preview": {
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "read-and-learn-preview",
+          "database_id": "badf57e8-aa78-4ede-9276-2e88c8de0f6f",
+        },
+      ],
+    },
+  },
 }
