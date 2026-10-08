@@ -116,8 +116,12 @@ jobs:
             --retry-all-errors \
             --retry-delay 5 \
             --max-time 20 \
-            "$SITE_URL/" |
-            grep -Fq "Welcome to Read &amp; Learn"
+            --output "$RUNNER_TEMP/home-page.html" \
+            "$SITE_URL/"
+
+          grep -Fq \
+            "Welcome to Read &amp; Learn" \
+            "$RUNNER_TEMP/home-page.html"
 
       - name: Check public pages
         run: |
