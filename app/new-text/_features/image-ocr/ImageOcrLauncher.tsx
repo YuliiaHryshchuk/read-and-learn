@@ -11,10 +11,14 @@ const ImageOcrDialog = dynamic(() => import("./ImageOcrDialog"), {
 
 type ImageOcrLauncherProps = {
   disabled?: boolean;
+  text: string;
+  onTextChange: (text: string) => void;
 };
 
 export default function ImageOcrLauncher({
   disabled = false,
+  text,
+  onTextChange,
 }: ImageOcrLauncherProps) {
   const [isOpen, setIsOpen] = useState(false);
   const closeDialog = useCallback(() => setIsOpen(false), []);
@@ -35,7 +39,11 @@ export default function ImageOcrLauncher({
       </button>
 
       {isOpen && (
-        <ImageOcrDialog onClose={closeDialog} />
+        <ImageOcrDialog
+          text={text}
+          onClose={closeDialog}
+          onTextChange={onTextChange}
+        />
       )}
     </>
   );

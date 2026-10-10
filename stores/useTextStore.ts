@@ -37,7 +37,6 @@ type TextState = {
     adaptation: StructuredAdaptationResult;
   }) => void;
   clearEditingMaterial: () => void;
-  dismissUnsavedGeneration: () => void;
   finishHydration: () => void;
 };
 
@@ -223,12 +222,13 @@ export const useTextStore = create<TextState>()(
       })),
       setTargetLanguage: (targetLanguage) => set({ targetLanguage }),
       setResult: (result, resultLanguage) => {
+        const isEditingSavedMaterial = Boolean(get().editingMaterial);
         set({
           result,
           resultLanguage,
-          hasUnsavedGeneration: true,
+          hasUnsavedGeneration: isEditingSavedMaterial,
         });
-        if (!get().editingMaterial) {
+        if (!isEditingSavedMaterial) {
           persistResult(result, resultLanguage);
         }
       },
@@ -273,7 +273,6 @@ export const useTextStore = create<TextState>()(
         targetLanguage: TARGET_LANGUAGE,
         resultLanguage: null,
       }),
-      dismissUnsavedGeneration: () => set({ hasUnsavedGeneration: false }),
       finishHydration: () => set({ hasHydrated: true }),
     }),
     {
@@ -347,7 +346,7 @@ export async function activateTextStoreForUser(userUuid: string) {
       useTextStore.setState({
         result: savedResult.result,
         resultLanguage: savedResult.resultLanguage,
-        hasUnsavedGeneration: true,
+        hasUnsavedGeneration: false,
       });
     }
     useTextStore.getState().finishHydration();

@@ -78,7 +78,11 @@ export default function SourceTextEditor({
         disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
       />
-      <ImageOcrLauncher disabled={disabled} />
+      <ImageOcrLauncher
+        disabled={disabled}
+        text={text}
+        onTextChange={onChange}
+      />
     </TextContainer>
   );
 }

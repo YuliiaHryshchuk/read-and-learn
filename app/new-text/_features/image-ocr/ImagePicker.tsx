@@ -2,12 +2,15 @@
 
 import Image from "next/image";
 import {
+  useCallback,
   useRef,
   useState,
   useSyncExternalStore,
   type ChangeEvent,
   type DragEvent,
 } from "react";
+import type { PercentCrop } from "react-image-crop";
+import ImageCropEditor, { type ImageRotation } from "./ImageCropEditor";
 import { getImageFileError, IMAGE_ACCEPT } from "./imageFileValidation";
 import styles from "./imageOcr.module.scss";
 import { isMobileDevice } from "./mobileDevice";
@@ -24,8 +27,18 @@ function formatFileSize(size: number) {
 }
 
 export type SelectedImage = {
+  crop: PercentCrop;
   file: File;
   previewUrl: string;
+  rotation: ImageRotation;
+};
+
+const FULL_IMAGE_CROP: PercentCrop = {
+  unit: "%",
+  x: 0,
+  y: 0,
+  width: 100,
+  height: 100,
 };
 
 type ImagePickerProps = {
@@ -69,8 +82,10 @@ export default function ImagePicker({
     }
 
     onSelectedImageChange({
+      crop: FULL_IMAGE_CROP,
       file,
       previewUrl: URL.createObjectURL(file),
+      rotation: 0,
     });
   }
 
@@ -84,6 +99,26 @@ export default function ImagePicker({
     selectionRequestRef.current += 1;
     onSelectedImageChange(null);
     setMessage("");
+  }
+
+  const handleImageError = useCallback(() => {
+    onSelectedImageChange(null);
+    setMessage("This image could not be opened.");
+  }, [onSelectedImageChange]);
+
+  function updateCrop(crop: PercentCrop) {
+    if (!selectedImage) return;
+    onSelectedImageChange({ ...selectedImage, crop });
+  }
+
+  function rotateClockwise() {
+    if (!selectedImage) return;
+    const rotation = ((selectedImage.rotation + 90) % 360) as ImageRotation;
+    onSelectedImageChange({
+      ...selectedImage,
+      crop: FULL_IMAGE_CROP,
+      rotation,
+    });
   }
 
   function enterDropzone(event: DragEvent<HTMLDivElement>) {
@@ -133,7 +168,7 @@ export default function ImagePicker({
   );
 
   if (selectedImage) {
-    const { file: selectedFile, previewUrl } = selectedImage;
+    const { crop, file: selectedFile, previewUrl, rotation } = selectedImage;
     return (
       <div className={styles.selectedImage}>
         {inputs}
@@ -142,30 +177,33 @@ export default function ImagePicker({
             {message}
           </p>
         )}
-        <div className={styles.preview}>
-          <Image
-            key={previewUrl}
-            src={previewUrl}
-            alt="Selected image preview"
-            fill
-            sizes="(max-width: 719px) calc(100vw - 2rem), 480px"
-            unoptimized
-            onError={() => {
-              onSelectedImageChange(null);
-              setMessage("This image could not be opened.");
-            }}
-          />
-        </div>
+        <ImageCropEditor
+          crop={crop}
+          previewUrl={previewUrl}
+          rotation={rotation}
+          onCropChange={updateCrop}
+          onImageError={handleImageError}
+        />
         <div className={styles.fileDetails}>
-          <p className="font-semibold line-heading">{selectedFile.name}</p>
-          <p className="mt-1 text-muted text-sm">
-            {formatFileSize(selectedFile.size)} · JPEG or PNG
+          <p className="text-sm line-heading">
+            <span className="font-semibold">{selectedFile.name}</span>
+            <span className="text-muted">
+              {" "}· {formatFileSize(selectedFile.size)} · JPEG or PNG
+            </span>
           </p>
         </div>
         <div className={styles.selectedActions}>
           <button
             type="button"
-            className={`${styles.secondaryButton} button px-5 py-3`}
+            className={`${styles.secondaryButton} ${styles.rotateButton} button px-4 py-3`}
+            onClick={rotateClockwise}
+          >
+            <span className={styles.rotateIcon} aria-hidden="true">↻</span>
+            Rotate 90°
+          </button>
+          <button
+            type="button"
+            className={`${styles.secondaryButton} button px-4 py-3`}
             onClick={() => chooseInputRef.current?.click()}
           >
             Choose another image
@@ -177,6 +215,9 @@ export default function ImagePicker({
           >
             Remove image
           </button>
+          <p className="visually-hidden" aria-live="polite">
+            Image rotation: {rotation}°
+          </p>
         </div>
       </div>
     );

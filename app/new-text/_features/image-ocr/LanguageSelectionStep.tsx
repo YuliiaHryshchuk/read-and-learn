@@ -1,26 +1,24 @@
 import Dropdown, { type Option } from "react-dropdown";
 import styles from "./imageOcr.module.scss";
-import { OCR_LANGUAGES, type OcrLanguage } from "./ocrLanguages";
+import {
+  isOcrLanguage,
+  OCR_LANGUAGES,
+  type OcrLanguage,
+} from "./ocrLanguages";
 
 type LanguageSelectionStepProps = {
   value: OcrLanguage | "";
   onChange: (language: OcrLanguage | "") => void;
 };
 
-const LANGUAGE_OPTIONS: Option[] = Object.entries(OCR_LANGUAGES).map(
-  ([value, label]) => ({ value, label }),
-);
-
-function isOcrLanguage(value: string): value is OcrLanguage {
-  return value in OCR_LANGUAGES;
-}
+const LANGUAGE_OPTIONS: Option[] = OCR_LANGUAGES;
 
 export default function LanguageSelectionStep({
   value,
   onChange,
 }: LanguageSelectionStepProps) {
   return (
-    <section className={styles.placeholderStep} aria-labelledby="language-step-title">
+    <section className={styles.languageStep} aria-labelledby="language-step-title">
       <h3 id="language-step-title" className="text-lg font-semibold line-heading">
         Choose the image language
       </h3>

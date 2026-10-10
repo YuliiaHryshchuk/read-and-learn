@@ -5,10 +5,16 @@ import ImageOcrWizard from "./ImageOcrWizard";
 import styles from "./imageOcr.module.scss";
 
 type ImageOcrDialogProps = {
+  text: string;
   onClose: () => void;
+  onTextChange: (text: string) => void;
 };
 
-export default function ImageOcrDialog({ onClose }: ImageOcrDialogProps) {
+export default function ImageOcrDialog({
+  text,
+  onClose,
+  onTextChange,
+}: ImageOcrDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -66,7 +72,13 @@ export default function ImageOcrDialog({ onClose }: ImageOcrDialogProps) {
           </button>
         </header>
 
-        <ImageOcrWizard />
+        <ImageOcrWizard
+          text={text}
+          onComplete={(nextText) => {
+            onTextChange(nextText);
+            onClose();
+          }}
+        />
       </section>
     </dialog>
   );
