@@ -1,0 +1,541 @@
+.launcher {
+  position: absolute;
+  z-index: 1;
+  top: 10px;
+  right: 24px;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 9px;
+  background: var(--color-surface);
+  box-shadow: 0 1px 4px rgb(23 40 69 / 10%);
+  cursor: pointer;
+  line-height: 0;
+}
+
+.launcher img {
+  display: block;
+  width: 22px;
+  height: 22px;
+}
+
+.launcher:hover:not(:disabled) {
+  background: var(--color-accent-soft);
+}
+
+.launcher:focus-visible {
+  outline: 3px solid var(--focus-accent);
+  outline-offset: 2px;
+}
+
+.launcher:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.dialog {
+  position: fixed;
+  inset: 0;
+  width: min(560px, calc(100vw - var(--space-6)));
+  height: min(680px, calc(100dvh - var(--space-6)));
+  max-width: none;
+  max-height: none;
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--color-border-warm);
+  border-radius: 14px;
+  background: var(--color-surface-warm);
+  box-shadow: var(--shadow-raised);
+  color: var(--color-text-strong);
+  overflow: hidden;
+}
+
+.dialog::backdrop {
+  background: rgb(23 40 69 / 42%);
+  backdrop-filter: blur(2px);
+}
+
+.dialogCard {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  padding: var(--space-5);
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.dialogHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.stepShell {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.stepIndicator {
+  margin-top: var(--space-4);
+}
+
+.stepContent {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.stepNavigation {
+  display: flex;
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  border-top: 1px solid var(--color-border-warm);
+}
+
+.stepNavigation button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.backButton {
+  min-width: max-content;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.resultNavigation button {
+  white-space: nowrap;
+}
+
+.placeholderStep {
+  min-height: 260px;
+  margin-top: var(--space-5);
+  padding: var(--space-5);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: 11px;
+  background: var(--color-surface);
+}
+
+.recognitionState,
+.resultMessage {
+  display: flex;
+  min-height: 300px;
+  margin-top: var(--space-5);
+  padding: var(--space-5);
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  border: 1px solid var(--color-border-warm);
+  border-radius: 11px;
+  background: var(--color-surface);
+  text-align: center;
+}
+
+.progressRingWrapper {
+  position: relative;
+  width: 116px;
+  height: 116px;
+  margin: var(--space-5) 0 var(--space-4);
+}
+
+.progressRing {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.progressTrack,
+.progressValue {
+  fill: none;
+  stroke-width: 7;
+}
+
+.progressTrack {
+  stroke: var(--color-border-warm);
+}
+
+.progressValue {
+  stroke: var(--color-accent);
+  stroke-dasharray: 100;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 180ms ease;
+}
+
+.progressCancel {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 9px;
+  background: var(--color-accent-soft);
+  color: var(--color-accent-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--text-2xl);
+  line-height: 1;
+  transform: translate(-50%, -50%);
+}
+
+.progressCancel:hover,
+.progressCancel:focus-visible {
+  background: var(--color-accent-soft-strong);
+}
+
+.progressCancel:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.resultStep {
+  display: flex;
+  min-height: 0;
+  margin-top: var(--space-5);
+  flex: 1;
+  flex-direction: column;
+}
+
+.resultTextarea {
+  width: 100%;
+  min-height: 180px;
+  margin-top: var(--space-3);
+  flex: 1;
+  padding: var(--space-4);
+  resize: vertical;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 9px;
+  background: var(--color-surface);
+  color: var(--color-text-strong);
+  font: inherit;
+}
+
+.resultTextarea:focus-visible {
+  border-color: var(--color-accent);
+  outline: 3px solid var(--focus-accent);
+  outline-offset: 1px;
+}
+
+.resultError {
+  margin-top: var(--space-3);
+}
+
+.languageLabel {
+  display: block;
+}
+
+.languageDropdown {
+  position: relative;
+  width: 100%;
+}
+
+.languageDropdownControl {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 44px 10px 12px;
+  align-items: center;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 9px;
+  background-color: var(--color-surface);
+  color: var(--color-text-strong);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.languageDropdownControl:hover,
+.languageDropdownControl[aria-expanded="true"] {
+  border-color: var(--color-accent-border);
+}
+
+.languageDropdownControl:focus-visible {
+  border-color: var(--color-accent);
+  outline: 3px solid var(--focus-accent);
+  outline-offset: 1px;
+}
+
+.languageDropdownValue {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.languageDropdown :global(.OcrLanguageDropdown-arrow-wrapper) {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: grid;
+  width: 42px;
+  height: 100%;
+  place-items: center;
+  pointer-events: none;
+}
+
+.languageDropdownArrow {
+  display: block;
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid var(--color-accent-text);
+  border-bottom: 2px solid var(--color-accent-text);
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 150ms ease;
+}
+
+.languageDropdownArrowOpen {
+  transform: translateY(2px) rotate(225deg);
+}
+
+.languageDropdownMenu {
+  position: absolute;
+  z-index: 2;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 100%;
+  max-height: 220px;
+  padding: var(--space-1);
+  margin: 0;
+  border: 1px solid var(--color-border-warm);
+  border-radius: 9px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-raised);
+  list-style: none;
+  overflow-y: auto;
+}
+
+.languageDropdownOption {
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 7px;
+  color: var(--color-text-strong);
+  cursor: pointer;
+}
+
+.languageDropdownOption:hover,
+.languageDropdownOption:global(.is-active) {
+  background: var(--color-accent-soft);
+}
+
+.languageDropdownOption:global(.is-selected) {
+  color: var(--color-accent-text);
+  font-weight: 600;
+}
+
+.closeButton {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 9px;
+  background: var(--color-accent-soft);
+  color: var(--color-accent-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--text-2xl);
+  line-height: 1;
+}
+
+.closeButton:hover,
+.closeButton:focus-visible {
+  background: var(--color-accent-soft-strong);
+}
+
+.closeButton:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.dropzone {
+  display: flex;
+  min-height: 260px;
+  margin-top: var(--space-5);
+  padding: var(--space-5);
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  border: 2px dashed var(--color-border-strong);
+  border-radius: 11px;
+  background: var(--color-surface);
+  text-align: center;
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.dropzoneActive {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.dropzoneIcon {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--color-accent-soft);
+}
+
+.secondaryButton {
+  border: 1px solid var(--color-accent-border);
+  background: var(--color-surface);
+  color: var(--color-accent-text);
+}
+
+.secondaryButton:hover {
+  background: var(--color-accent-soft);
+}
+
+.fileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.fileError {
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--color-accent-border);
+  border-radius: 8px;
+  background: var(--color-accent-soft);
+}
+
+.pickerActions,
+.selectedActions {
+  display: flex;
+  margin-top: var(--space-5);
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.selectedImage {
+  margin-top: var(--space-5);
+}
+
+.selectedImage .fileError {
+  margin-top: 0;
+  margin-bottom: var(--space-3);
+}
+
+.preview {
+  position: relative;
+  width: 100%;
+  height: 240px;
+  border: 1px solid var(--color-border);
+  border-radius: 11px;
+  background: var(--color-surface-subtle);
+  overflow: hidden;
+}
+
+.preview img {
+  object-fit: contain;
+}
+
+.fileDetails {
+  min-width: 0;
+  margin-top: var(--space-4);
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+.removeButton {
+  padding: var(--space-3);
+  border: 0;
+  background: transparent;
+  color: var(--color-accent-text);
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.removeButton:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 719.98px) {
+  .launcher {
+    top: 8px;
+    right: 20px;
+  }
+
+  .dialog {
+    inset: 0;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .dialogCard {
+    width: 100%;
+    height: 100%;
+    padding:
+      max(var(--space-4), env(safe-area-inset-top))
+      max(var(--space-4), env(safe-area-inset-right))
+      max(var(--space-4), env(safe-area-inset-bottom))
+      max(var(--space-4), env(safe-area-inset-left));
+  }
+
+  .dropzone {
+    min-height: 240px;
+    padding: var(--space-4);
+  }
+
+  .pickerActions,
+  .selectedActions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .pickerActions button,
+  .selectedActions button,
+  .stepNavigation button {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .stepNavigation {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .preview {
+    height: min(280px, 38dvh);
+  }
+
+  .recognitionState,
+  .resultMessage {
+    min-height: 45dvh;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progressValue {
+    transition: none;
+  }
+}

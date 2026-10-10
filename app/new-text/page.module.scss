@@ -56,6 +56,7 @@
 }
 
 .inputContainer {
+  position: relative;
   display: flex;
   flex: 1;
   min-height: 0;
@@ -69,14 +70,17 @@
 }
 
 .textarea {
-  height: 100%;
+  height: auto;
   min-height: 160px;
+  flex: 1;
+  align-self: stretch;
   resize: none;
   border: 0;
   outline: none;
   background: transparent;
   color: var(--color-text);
   font: inherit;
+  padding-right: calc(var(--space-8) + var(--space-7));
 }
 
 .formMessage {

@@ -13,6 +13,8 @@ const eslintConfig = defineConfig([
     "coverage/**",
     "out/**",
     "build/**",
+    // Vendored, generated Tesseract.js worker and WASM runtime.
+    "public/tesseract/**",
     "next-env.d.ts",
   ]),
 ]);

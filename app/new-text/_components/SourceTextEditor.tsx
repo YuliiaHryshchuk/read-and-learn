@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef } from "react";
 import TextContainer from "@/components/TextContainer";
+import ImageOcrLauncher from "../_features/image-ocr/ImageOcrLauncher";
 import type { NewTextMode } from "../_hooks/useMaterialEditor";
 import styles from "../page.module.scss";
 
@@ -76,6 +77,12 @@ export default function SourceTextEditor({
         value={text}
         disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
+      />
+      <ImageOcrLauncher
+        currentText={text}
+        maxCharacters={maxCharacters}
+        onTextChange={onChange}
+        disabled={disabled}
       />
     </TextContainer>
   );
