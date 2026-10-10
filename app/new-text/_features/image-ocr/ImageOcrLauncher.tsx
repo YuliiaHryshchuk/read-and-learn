@@ -10,16 +10,10 @@ const ImageOcrDialog = dynamic(() => import("./ImageOcrDialog"), {
 });
 
 type ImageOcrLauncherProps = {
-  currentText: string;
-  maxCharacters: number;
-  onTextChange: (text: string) => void;
   disabled?: boolean;
 };
 
 export default function ImageOcrLauncher({
-  currentText,
-  maxCharacters,
-  onTextChange,
   disabled = false,
 }: ImageOcrLauncherProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -41,12 +35,7 @@ export default function ImageOcrLauncher({
       </button>
 
       {isOpen && (
-        <ImageOcrDialog
-          currentText={currentText}
-          maxCharacters={maxCharacters}
-          onTextChange={onTextChange}
-          onClose={closeDialog}
-        />
+        <ImageOcrDialog onClose={closeDialog} />
       )}
     </>
   );

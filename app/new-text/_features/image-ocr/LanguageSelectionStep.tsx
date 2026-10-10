@@ -1,21 +1,18 @@
 import Dropdown, { type Option } from "react-dropdown";
 import styles from "./imageOcr.module.scss";
-import {
-  TESSERACT_LANGUAGES,
-  type TesseractLanguage,
-} from "./tesseractRuntime";
+import { OCR_LANGUAGES, type OcrLanguage } from "./ocrLanguages";
 
 type LanguageSelectionStepProps = {
-  value: TesseractLanguage | "";
-  onChange: (language: TesseractLanguage | "") => void;
+  value: OcrLanguage | "";
+  onChange: (language: OcrLanguage | "") => void;
 };
 
-const LANGUAGE_OPTIONS: Option[] = Object.entries(TESSERACT_LANGUAGES).map(
+const LANGUAGE_OPTIONS: Option[] = Object.entries(OCR_LANGUAGES).map(
   ([value, label]) => ({ value, label }),
 );
 
-function isTesseractLanguage(value: string): value is TesseractLanguage {
-  return value in TESSERACT_LANGUAGES;
+function isOcrLanguage(value: string): value is OcrLanguage {
+  return value in OCR_LANGUAGES;
 }
 
 export default function LanguageSelectionStep({
@@ -56,7 +53,7 @@ export default function LanguageSelectionStep({
         value={value || null}
         onChange={(option) => {
           const language = String(option.value);
-          onChange(isTesseractLanguage(language) ? language : "");
+          onChange(isOcrLanguage(language) ? language : "");
         }}
       />
     </section>

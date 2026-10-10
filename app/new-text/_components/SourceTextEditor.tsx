@@ -78,12 +78,7 @@ export default function SourceTextEditor({
         disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
       />
-      <ImageOcrLauncher
-        currentText={text}
-        maxCharacters={maxCharacters}
-        onTextChange={onChange}
-        disabled={disabled}
-      />
+      <ImageOcrLauncher disabled={disabled} />
     </TextContainer>
   );
 }

@@ -12,52 +12,17 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import ImageOcrLauncher from "./ImageOcrLauncher";
 
-const ocrMocks = vi.hoisted(() => ({
-  createWorker: vi.fn(),
-  recognize: vi.fn(),
-  terminate: vi.fn(),
-}));
-
-vi.mock("./createImageOcrWorker", () => ({
-  createImageOcrWorker: ocrMocks.createWorker,
-}));
-
 vi.mock("next/image", () => ({
   default: ({ src, alt }: { src: string; alt: string }) => (
     <span aria-label={alt} data-image-src={src} role="img" />
   ),
 }));
 
-function renderLauncher({
-  currentText = "",
-  maxCharacters = 3000,
-  onTextChange = vi.fn(),
-}: {
-  currentText?: string;
-  maxCharacters?: number;
-  onTextChange?: (text: string) => void;
-} = {}) {
-  return {
-    onTextChange,
-    ...render(
-      <ImageOcrLauncher
-        currentText={currentText}
-        maxCharacters={maxCharacters}
-        onTextChange={onTextChange}
-      />,
-    ),
-  };
+function renderLauncher() {
+  return render(<ImageOcrLauncher />);
 }
 
 beforeEach(() => {
-  ocrMocks.recognize.mockReset().mockResolvedValue({
-    data: { text: "Recognized text" },
-  });
-  ocrMocks.terminate.mockReset().mockResolvedValue(undefined);
-  ocrMocks.createWorker.mockReset().mockResolvedValue({
-    recognize: ocrMocks.recognize,
-    terminate: ocrMocks.terminate,
-  });
   Object.defineProperty(URL, "createObjectURL", {
     configurable: true,
     value: vi.fn(() => "blob:test-image"),
@@ -248,7 +213,7 @@ describe("ImageOcrLauncher", () => {
     await user.click(within(dialog).getByRole("option", { name: "Russian" }));
     expect(languageDropdown.textContent).toContain("Russian");
     expect(within(dialog).getByRole("button", { name: "Recognize text" })
-      .hasAttribute("disabled")).toBe(false);
+      .hasAttribute("disabled")).toBe(true);
 
     await user.click(within(dialog).getByRole("button", { name: "Back" }));
     expect(within(dialog).getByText("lesson.jpg")).toBeTruthy();
@@ -310,148 +275,4 @@ describe("ImageOcrLauncher", () => {
     expect(within(dialog).queryByText("replacement.jfif")).toBeNull();
   });
 
-  it("adds recognized text to the current text and closes the dialog", async () => {
-    const user = userEvent.setup();
-    const onTextChange = vi.fn();
-    renderLauncher({ currentText: "Existing text", onTextChange });
-    await user.click(screen.getByRole("button", { name: "Extract text from image" }));
-    const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
-    const file = new File(
-      [new Uint8Array([0xff, 0xd8, 0xff, 0xe0])],
-      "lesson.jpg",
-      { type: "image/jpeg" },
-    );
-
-    await user.upload(within(dialog).getByLabelText("Choose image file"), file);
-    await user.click(within(dialog).getByRole("button", { name: "Continue" }));
-    await user.click(within(dialog).getByRole("combobox", { name: "Text language" }));
-    await user.click(within(dialog).getByRole("option", { name: "English" }));
-    await user.click(within(dialog).getByRole("button", { name: "Recognize text" }));
-
-    expect((await within(dialog).findByRole("textbox", {
-      name: "Review recognized text",
-    }) as HTMLTextAreaElement).value).toBe("Recognized text");
-    await user.click(within(dialog).getByRole("button", {
-      name: "Add to current text",
-    }));
-
-    expect(onTextChange).toHaveBeenCalledWith("Existing text\n\nRecognized text");
-    expect(screen.queryByRole("dialog", { name: "Extract text from image" }))
-      .toBeNull();
-  });
-
-  it("shows one use-text action when the current text is empty", async () => {
-    const user = userEvent.setup();
-    const onTextChange = vi.fn();
-    renderLauncher({ onTextChange });
-    await user.click(screen.getByRole("button", { name: "Extract text from image" }));
-    const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
-    const file = new File(
-      [new Uint8Array([0xff, 0xd8, 0xff, 0xe0])],
-      "lesson.jpg",
-      { type: "image/jpeg" },
-    );
-
-    await user.upload(within(dialog).getByLabelText("Choose image file"), file);
-    await user.click(within(dialog).getByRole("button", { name: "Continue" }));
-    await user.click(within(dialog).getByRole("combobox", { name: "Text language" }));
-    await user.click(within(dialog).getByRole("option", { name: "English" }));
-    await user.click(within(dialog).getByRole("button", { name: "Recognize text" }));
-
-    const useTextButton = await within(dialog).findByRole("button", {
-      name: "Use this text",
-    });
-    expect(within(dialog).queryByRole("button", { name: "Replace current text" }))
-      .toBeNull();
-    expect(within(dialog).queryByRole("button", { name: "Add to current text" }))
-      .toBeNull();
-
-    await user.click(useTextButton);
-    expect(onTextChange).toHaveBeenCalledWith("Recognized text");
-  });
-
-  it("shows a no-text message and lets the user retry", async () => {
-    ocrMocks.recognize.mockResolvedValue({ data: { text: " \r\n " } });
-    const user = userEvent.setup();
-    renderLauncher();
-    await user.click(screen.getByRole("button", { name: "Extract text from image" }));
-    const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
-    const file = new File(
-      [new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])],
-      "lesson.png",
-      { type: "image/png" },
-    );
-
-    await user.upload(within(dialog).getByLabelText("Choose image file"), file);
-    await user.click(within(dialog).getByRole("button", { name: "Continue" }));
-    await user.click(within(dialog).getByRole("combobox", { name: "Text language" }));
-    await user.click(within(dialog).getByRole("option", { name: "Russian" }));
-    await user.click(within(dialog).getByRole("button", { name: "Recognize text" }));
-
-    expect(await within(dialog).findByRole("heading", { name: "No text found" }))
-      .toBeTruthy();
-    expect(within(dialog).getByRole("button", { name: "Try again" })).toBeTruthy();
-    expect(within(dialog).queryByRole("button", { name: "Add to current text" }))
-      .toBeNull();
-  });
-
-  it("cancels recognition and returns to the language step", async () => {
-    let resolveRecognition!: (value: { data: { text: string } }) => void;
-    ocrMocks.recognize.mockReturnValue(new Promise((resolve) => {
-      resolveRecognition = resolve;
-    }));
-    const user = userEvent.setup();
-    renderLauncher();
-    await user.click(screen.getByRole("button", { name: "Extract text from image" }));
-    const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
-    const file = new File(
-      [new Uint8Array([0xff, 0xd8, 0xff, 0xe0])],
-      "lesson.jpg",
-      { type: "image/jpeg" },
-    );
-
-    await user.upload(within(dialog).getByLabelText("Choose image file"), file);
-    await user.click(within(dialog).getByRole("button", { name: "Continue" }));
-    await user.click(within(dialog).getByRole("combobox", { name: "Text language" }));
-    await user.click(within(dialog).getByRole("option", { name: "English" }));
-    await user.click(within(dialog).getByRole("button", { name: "Recognize text" }));
-
-    expect(await within(dialog).findByRole("progressbar", {
-      name: "Text recognition progress",
-    })).toBeTruthy();
-    await user.click(within(dialog).getByRole("button", { name: "Cancel recognition" }));
-
-    expect(within(dialog).getByRole("heading", { name: "Choose the image language" }))
-      .toBeTruthy();
-    await waitFor(() => expect(ocrMocks.terminate).toHaveBeenCalled());
-    resolveRecognition({ data: { text: "Late result" } });
-  });
-
-  it("does not replace text when the recognized result exceeds the limit", async () => {
-    ocrMocks.recognize.mockResolvedValue({ data: { text: "Too long" } });
-    const user = userEvent.setup();
-    const onTextChange = vi.fn();
-    renderLauncher({ currentText: "Short", maxCharacters: 5, onTextChange });
-    await user.click(screen.getByRole("button", { name: "Extract text from image" }));
-    const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
-    const file = new File(
-      [new Uint8Array([0xff, 0xd8, 0xff, 0xe0])],
-      "lesson.jpg",
-      { type: "image/jpeg" },
-    );
-
-    await user.upload(within(dialog).getByLabelText("Choose image file"), file);
-    await user.click(within(dialog).getByRole("button", { name: "Continue" }));
-    await user.click(within(dialog).getByRole("combobox", { name: "Text language" }));
-    await user.click(within(dialog).getByRole("option", { name: "English" }));
-    await user.click(within(dialog).getByRole("button", { name: "Recognize text" }));
-    await user.click(await within(dialog).findByRole("button", {
-      name: "Replace current text",
-    }));
-
-    expect(within(dialog).getByRole("alert").textContent).toContain(
-      "The limit is 5 characters.",
-    );
-    expect(onTextChange).not.toHaveBeenCalled();
-  });
 });
