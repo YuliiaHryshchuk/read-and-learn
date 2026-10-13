@@ -28,6 +28,12 @@ function canvasToBlob(canvas: HTMLCanvasElement) {
   });
 }
 
+function releaseCanvas(canvas: HTMLCanvasElement | null) {
+  if (!canvas) return;
+  canvas.width = 0;
+  canvas.height = 0;
+}
+
 function drawRotatedImage(
   image: HTMLImageElement,
   rotation: ImageRotation,
@@ -82,28 +88,39 @@ export async function createCroppedImageBlob({
   rotation,
 }: SelectedImage) {
   const image = await loadImage(previewUrl);
-  const rotatedCanvas = drawRotatedImage(image, rotation);
-  const pixels = cropPixels(crop, rotatedCanvas.width, rotatedCanvas.height);
-  const outputCanvas = document.createElement("canvas");
-  outputCanvas.width = pixels.width;
-  outputCanvas.height = pixels.height;
+  let rotatedCanvas: HTMLCanvasElement | null = null;
+  let outputCanvas: HTMLCanvasElement | null = null;
 
-  const context = outputCanvas.getContext("2d");
-  if (!context) throw new Error("Image processing is not supported in this browser.");
+  try {
+    rotatedCanvas = drawRotatedImage(image, rotation);
+    const pixels = cropPixels(crop, rotatedCanvas.width, rotatedCanvas.height);
+    outputCanvas = document.createElement("canvas");
+    outputCanvas.width = pixels.width;
+    outputCanvas.height = pixels.height;
 
-  context.fillStyle = "#ffffff";
-  context.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
-  context.drawImage(
-    rotatedCanvas,
-    pixels.x,
-    pixels.y,
-    pixels.width,
-    pixels.height,
-    0,
-    0,
-    pixels.width,
-    pixels.height,
-  );
+    const context = outputCanvas.getContext("2d");
+    if (!context) throw new Error("Image processing is not supported in this browser.");
 
-  return canvasToBlob(outputCanvas);
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
+    context.drawImage(
+      rotatedCanvas,
+      pixels.x,
+      pixels.y,
+      pixels.width,
+      pixels.height,
+      0,
+      0,
+      pixels.width,
+      pixels.height,
+    );
+
+    return await canvasToBlob(outputCanvas);
+  } finally {
+    image.onload = null;
+    image.onerror = null;
+    image.removeAttribute("src");
+    releaseCanvas(outputCanvas);
+    releaseCanvas(rotatedCanvas);
+  }
 }

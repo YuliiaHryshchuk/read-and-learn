@@ -5,12 +5,20 @@ const DETECTION_MODEL_URL =
   "/ocr/models/PP-OCRv6_small_det_onnx_infer.bin";
 const RECOGNITION_MODEL_URL =
   "/ocr/models/PP-OCRv6_small_rec_onnx_infer.bin";
+const WASM_PATHS = {
+  mjs: "/ocr/ort/ort-wasm-simd-threaded.mjs",
+  wasm: "/ocr/ort/ort-wasm-simd-threaded.wasm",
+} as const;
 
 type OcrClient = {
+  dispose: () => Promise<void>;
   predict: (input: Blob) => Promise<OcrResult[]>;
 };
 
-let clientPromise: Promise<OcrClient> | null = null;
+export type OcrSession = {
+  dispose: () => Promise<void>;
+  recognize: (image: Blob) => Promise<OcrResult>;
+};
 
 async function createClient(language: OcrLanguage): Promise<OcrClient> {
   const { PaddleOCR } = await import("@paddleocr/paddleocr-js");
@@ -24,29 +32,32 @@ async function createClient(language: OcrLanguage): Promise<OcrClient> {
     textRecognitionModelAsset: { url: RECOGNITION_MODEL_URL },
     worker: true,
     ortOptions: {
-      backend: "auto",
+      backend: "wasm",
+      // PaddleOCR 0.4.2 still types this option as a string, while its
+      // ONNX Runtime 1.30 dependency also accepts explicit module/binary URLs.
+      // Explicit URLs prevent ORT from selecting the oversized JSEP build.
+      wasmPaths: WASM_PATHS as unknown as string,
       numThreads: 1,
       simd: true,
     },
   });
 }
 
-function getClient(language: OcrLanguage) {
-  // PP-OCRv6 uses the same multilingual model for every supported Latin language.
-  clientPromise ??= createClient(language).catch((error) => {
-    clientPromise = null;
-    throw error;
-  });
-  return clientPromise;
-}
+export async function createOcrSession(
+  language: OcrLanguage,
+): Promise<OcrSession> {
+  const client = await createClient(language);
 
-export async function recognizeImage(image: Blob, language: OcrLanguage) {
-  const client = await getClient(language);
-  const [result] = await client.predict(image);
+  return {
+    dispose: () => client.dispose(),
+    async recognize(image) {
+      const [result] = await client.predict(image);
 
-  if (!result) throw new Error("OCR did not return a result for this image.");
+      if (!result) throw new Error("OCR did not return a result for this image.");
 
-  return result;
+      return result;
+    },
+  };
 }
 
 export function resultToText(result: OcrResult) {

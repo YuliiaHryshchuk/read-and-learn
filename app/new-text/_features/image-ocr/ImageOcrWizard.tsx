@@ -1,12 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ImageOcrStep from "./ImageOcrStep";
 import ImagePicker, { type SelectedImage } from "./ImagePicker";
 import LanguageSelectionStep from "./LanguageSelectionStep";
 import RecognitionResultStep from "./RecognitionResultStep";
 import { createCroppedImageBlob } from "./cropImage";
-import { recognizeImage, resultToText } from "./paddleOcr";
+import {
+  createOcrSession,
+  resultToText,
+  type OcrSession,
+} from "./paddleOcr";
 import type { OcrLanguage } from "./ocrLanguages";
 import styles from "./imageOcr.module.scss";
 
@@ -33,6 +37,12 @@ function getRecognitionError(error: unknown) {
   return "Text recognition failed. Please try again.";
 }
 
+function disposeSession(sessionPromise: Promise<OcrSession>) {
+  void sessionPromise
+    .then((session) => session.dispose())
+    .catch(() => {});
+}
+
 export default function ImageOcrWizard({
   text,
   onComplete,
@@ -43,7 +53,20 @@ export default function ImageOcrWizard({
   const [recognizedText, setRecognizedText] = useState("");
   const [recognitionError, setRecognitionError] = useState("");
   const [isRecognizing, setIsRecognizing] = useState(false);
+  const activeSessionRef = useRef<Promise<OcrSession> | null>(null);
+  const isMountedRef = useRef(true);
   const previewUrl = selectedImage?.previewUrl;
+
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    return () => {
+      isMountedRef.current = false;
+      const activeSession = activeSessionRef.current;
+      activeSessionRef.current = null;
+      if (activeSession) disposeSession(activeSession);
+    };
+  }, []);
 
   useEffect(() => {
     if (!previewUrl) return;
@@ -56,15 +79,32 @@ export default function ImageOcrWizard({
     setIsRecognizing(true);
     setRecognitionError("");
 
+    let sessionPromise: Promise<OcrSession> | null = null;
+
     try {
       const image = await createCroppedImageBlob(selectedImage);
-      const result = await recognizeImage(image, selectedLanguage);
+      if (!isMountedRef.current) return;
+
+      sessionPromise = createOcrSession(selectedLanguage);
+      activeSessionRef.current = sessionPromise;
+      const session = await sessionPromise;
+      if (!isMountedRef.current) return;
+
+      const result = await session.recognize(image);
+      if (!isMountedRef.current) return;
+
       setRecognizedText(resultToText(result));
       setStep("result");
     } catch (error) {
-      setRecognitionError(getRecognitionError(error));
+      if (isMountedRef.current) {
+        setRecognitionError(getRecognitionError(error));
+      }
     } finally {
-      setIsRecognizing(false);
+      if (sessionPromise && activeSessionRef.current === sessionPromise) {
+        activeSessionRef.current = null;
+        disposeSession(sessionPromise);
+      }
+      if (isMountedRef.current) setIsRecognizing(false);
     }
   }
 

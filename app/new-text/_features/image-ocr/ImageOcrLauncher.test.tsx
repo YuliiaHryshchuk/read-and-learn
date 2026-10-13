@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -22,9 +23,21 @@ vi.mock("./cropImage", () => ({
   createCroppedImageBlob: vi.fn(async () => new Blob(["image"], { type: "image/jpeg" })),
 }));
 
+const ocrMocks = vi.hoisted(() => {
+  const dispose = vi.fn(async () => {});
+  const recognize = vi.fn(async () => ({ items: [] }));
+
+  return {
+    createOcrSession: vi.fn(async () => ({ dispose, recognize })),
+    dispose,
+    recognize,
+    resultToText: vi.fn(() => "Hola mundo"),
+  };
+});
+
 vi.mock("./paddleOcr", () => ({
-  recognizeImage: vi.fn(async () => ({ items: [] })),
-  resultToText: vi.fn(() => "Hola mundo"),
+  createOcrSession: ocrMocks.createOcrSession,
+  resultToText: ocrMocks.resultToText,
 }));
 
 function renderLauncher({
@@ -40,6 +53,14 @@ function renderLauncher({
 }
 
 beforeEach(() => {
+  vi.clearAllMocks();
+  ocrMocks.createOcrSession.mockImplementation(async () => ({
+    dispose: ocrMocks.dispose,
+    recognize: ocrMocks.recognize,
+  }));
+  ocrMocks.dispose.mockResolvedValue(undefined);
+  ocrMocks.recognize.mockResolvedValue({ items: [] });
+  ocrMocks.resultToText.mockReturnValue("Hola mundo");
   Object.defineProperty(URL, "createObjectURL", {
     configurable: true,
     value: vi.fn(() => "blob:test-image"),
@@ -228,6 +249,36 @@ describe("ImageOcrLauncher", () => {
     expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:first-image");
   });
 
+  it("does not create a preview URL when the dialog closes during validation", async () => {
+    let resolveBytes!: (bytes: ArrayBuffer) => void;
+    const pendingBytes = new Promise<ArrayBuffer>((resolve) => {
+      resolveBytes = resolve;
+    });
+    const user = userEvent.setup();
+    renderLauncher();
+    await user.click(screen.getByRole("button", { name: "Extract text from image" }));
+    const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
+    const file = new File(
+      [new Uint8Array([0xff, 0xd8, 0xff, 0xe0])],
+      "pending.jpg",
+      { type: "image/jpeg" },
+    );
+    Object.defineProperty(file, "slice", {
+      value: () => ({ arrayBuffer: () => pendingBytes }),
+    });
+
+    await user.upload(within(dialog).getByLabelText("Choose image file"), file);
+    await user.click(within(dialog).getByRole("button", {
+      name: "Close image text dialog",
+    }));
+    await act(async () => {
+      resolveBytes(Uint8Array.from([0xff, 0xd8, 0xff]).buffer);
+      await pendingBytes;
+    });
+
+    expect(URL.createObjectURL).not.toHaveBeenCalled();
+  });
+
   it("continues to the language step and keeps the image when going back", async () => {
     const user = userEvent.setup();
     renderLauncher();
@@ -288,11 +339,57 @@ describe("ImageOcrLauncher", () => {
 
     const result = await within(dialog).findByLabelText("Recognized text");
     expect((result as HTMLTextAreaElement).value).toBe("Hola mundo");
+    await waitFor(() => expect(ocrMocks.dispose).toHaveBeenCalledTimes(1));
     await user.click(within(dialog).getByRole("button", { name: "Use text" }));
 
     expect(onTextChange).toHaveBeenCalledWith("Hola mundo");
     expect(screen.queryByRole("dialog", { name: "Extract text from image" }))
       .toBeNull();
+  });
+
+  it("disposes a pending OCR worker when the dialog closes", async () => {
+    let resolveSession!: (session: {
+      dispose: typeof ocrMocks.dispose;
+      recognize: typeof ocrMocks.recognize;
+    }) => void;
+    const pendingSession = new Promise<{
+      dispose: typeof ocrMocks.dispose;
+      recognize: typeof ocrMocks.recognize;
+    }>((resolve) => {
+      resolveSession = resolve;
+    });
+    ocrMocks.createOcrSession.mockReturnValueOnce(pendingSession);
+    const user = userEvent.setup();
+    renderLauncher();
+    await user.click(screen.getByRole("button", { name: "Extract text from image" }));
+    const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
+    const file = new File(
+      [new Uint8Array([0xff, 0xd8, 0xff, 0xe0])],
+      "pending.jpg",
+      { type: "image/jpeg" },
+    );
+
+    await user.upload(within(dialog).getByLabelText("Choose image file"), file);
+    await user.click(within(dialog).getByRole("button", { name: "Continue" }));
+    await user.click(within(dialog).getByRole("combobox", { name: "Text language" }));
+    await user.click(within(dialog).getByRole("option", { name: "English" }));
+    await user.click(within(dialog).getByRole("button", { name: "Recognize text" }));
+    await waitFor(() => expect(ocrMocks.createOcrSession).toHaveBeenCalledTimes(1));
+
+    await user.click(within(dialog).getByRole("button", {
+      name: "Close image text dialog",
+    }));
+    await act(async () => {
+      resolveSession({
+        dispose: ocrMocks.dispose,
+        recognize: ocrMocks.recognize,
+      });
+      await pendingSession;
+    });
+
+    await waitFor(() => expect(ocrMocks.dispose).toHaveBeenCalledTimes(1));
+    expect(ocrMocks.recognize).not.toHaveBeenCalled();
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:test-image");
   });
 
   it("rejects unsupported and oversized files", async () => {

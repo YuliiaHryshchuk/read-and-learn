@@ -75,6 +75,9 @@ export default function ImageCropEditor({
     return () => {
       image.onload = null;
       image.onerror = null;
+      image.removeAttribute("src");
+      canvas.width = 0;
+      canvas.height = 0;
     };
   }, [onImageError, previewUrl, rotation]);
 

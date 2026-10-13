@@ -3,6 +3,7 @@
 import Image from "next/image";
 import {
   useCallback,
+  useEffect,
   useRef,
   useState,
   useSyncExternalStore,
@@ -61,6 +62,10 @@ export default function ImagePicker({
     getMobileDeviceSnapshot,
     () => false,
   );
+
+  useEffect(() => () => {
+    selectionRequestRef.current += 1;
+  }, []);
 
   async function selectFiles(files: FileList | File[]) {
     const requestId = ++selectionRequestRef.current;
