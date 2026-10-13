@@ -1,37 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import {
-  readLanguagePreference,
-  STUDY_LANGUAGE_PREFERENCE_KEY,
-  writeLanguagePreference,
-} from "@/lib/languagePreferences";
 import ImageOcrStep from "./ImageOcrStep";
-import ImagePicker, { type SelectedImage } from "./ImagePicker";
+import ImagePicker from "./ImagePicker";
 import LanguageSelectionStep from "./LanguageSelectionStep";
+import RecognitionErrorStep from "./RecognitionErrorStep";
 import RecognitionResultStep from "./RecognitionResultStep";
-import { createCroppedImageBlob } from "./cropImage";
-import { createOcrSession, resultToText, type OcrSession } from "./paddleOcr";
-import { isOcrLanguage, type OcrLanguage } from "./ocrLanguages";
+import RecognizingStep from "./RecognizingStep";
+import useImageOcrFlow from "./useImageOcrFlow";
 import styles from "./imageOcr.module.scss";
 
-type WizardStep = "image" | "language" | "result";
-
-const RECOGNITION_TIMEOUT_MS = 120_000;
-
-class RecognitionTimeoutError extends Error {
-  constructor() {
-    super(
-      "Text recognition took too long. This browser may not support local recognition. Try another browser or image.",
-    );
-    this.name = "RecognitionTimeoutError";
-  }
-}
-
-const STEP_NUMBER: Record<WizardStep, number> = {
+const STEP_NUMBER = {
   language: 1,
   image: 2,
-  result: 3,
+  recognizing: 3,
+  error: 3,
+  review: 3,
 };
 
 type ImageOcrWizardProps = {
@@ -44,229 +27,79 @@ function appendRecognizedText(text: string, recognizedText: string) {
   return `${text.trimEnd()}\n\n${recognizedText.trimStart()}`;
 }
 
-function getRecognitionError(error: unknown) {
-  if (error instanceof Error && error.message) return error.message;
-  return "Text recognition failed. Please try again.";
-}
-
-function disposeSession(sessionPromise: Promise<OcrSession>) {
-  void sessionPromise.then((session) => session.dispose()).catch(() => {});
-}
-
-function raceWithAbort<T>(operation: Promise<T>, signal: AbortSignal) {
-  if (signal.aborted) return Promise.reject(signal.reason);
-
-  return new Promise<T>((resolve, reject) => {
-    const abort = () => reject(signal.reason);
-    signal.addEventListener("abort", abort, { once: true });
-
-    operation.then(
-      (value) => {
-        signal.removeEventListener("abort", abort);
-        resolve(value);
-      },
-      (error: unknown) => {
-        signal.removeEventListener("abort", abort);
-        reject(error);
-      },
-    );
-  });
-}
-
-function getPreferredStudyLanguage(): OcrLanguage | "" {
-  const language = readLanguagePreference(STUDY_LANGUAGE_PREFERENCE_KEY);
-  return language && isOcrLanguage(language) ? language : "";
-}
-
 export default function ImageOcrWizard({
   text,
   onComplete,
 }: ImageOcrWizardProps) {
-  const [step, setStep] = useState<WizardStep>("language");
-  const [selectedImage, setSelectedImage] = useState<SelectedImage | null>(
-    null,
-  );
-  const [selectedLanguage, setSelectedLanguage] = useState<OcrLanguage | "">(
-    getPreferredStudyLanguage,
-  );
-  const [recognizedText, setRecognizedText] = useState("");
-  const [recognitionError, setRecognitionError] = useState("");
-  const [isRecognizing, setIsRecognizing] = useState(false);
-  const activeSessionRef = useRef<Promise<OcrSession> | null>(null);
-  const activeRecognitionRef = useRef<AbortController | null>(null);
-  const isMountedRef = useRef(true);
-  const previewUrl = selectedImage?.previewUrl;
+  const flow = useImageOcrFlow();
+  const { state } = flow;
 
-  useEffect(() => {
-    isMountedRef.current = true;
-
-    return () => {
-      isMountedRef.current = false;
-      activeRecognitionRef.current?.abort();
-      activeRecognitionRef.current = null;
-      const activeSession = activeSessionRef.current;
-      activeSessionRef.current = null;
-      if (activeSession) disposeSession(activeSession);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!previewUrl) return;
-    return () => URL.revokeObjectURL(previewUrl);
-  }, [previewUrl]);
-
-  async function recognizeSelectedImage() {
-    if (!selectedImage || !selectedLanguage || isRecognizing) return;
-
-    setIsRecognizing(true);
-    setRecognitionError("");
-    setStep("result");
-
-    const recognitionController = new AbortController();
-    activeRecognitionRef.current = recognitionController;
-    const timeoutId = window.setTimeout(() => {
-      recognitionController.abort(new RecognitionTimeoutError());
-    }, RECOGNITION_TIMEOUT_MS);
-    let sessionPromise: Promise<OcrSession> | null = null;
-
-    try {
-      const recognition = (async () => {
-        const image = await createCroppedImageBlob(selectedImage);
-        if (!isMountedRef.current) return null;
-
-        sessionPromise = createOcrSession(selectedLanguage);
-        activeSessionRef.current = sessionPromise;
-        const session = await sessionPromise;
-        if (!isMountedRef.current) return null;
-
-        return session.recognize(image);
-      })();
-      const result = await raceWithAbort(
-        recognition,
-        recognitionController.signal,
-      );
-      if (!isMountedRef.current) return;
-      if (!result) return;
-
-      setRecognizedText(resultToText(result));
-      setStep("result");
-    } catch (error) {
-      if (isMountedRef.current) {
-        setRecognitionError(getRecognitionError(error));
-      }
-    } finally {
-      window.clearTimeout(timeoutId);
-      if (activeRecognitionRef.current === recognitionController) {
-        activeRecognitionRef.current = null;
-      }
-      if (sessionPromise && activeSessionRef.current === sessionPromise) {
-        activeSessionRef.current = null;
-        disposeSession(sessionPromise);
-      }
-      if (isMountedRef.current) setIsRecognizing(false);
-    }
-  }
-
-  function selectLanguage(language: OcrLanguage | "") {
-    setSelectedLanguage(language);
-    writeLanguagePreference(STUDY_LANGUAGE_PREFERENCE_KEY, language);
-  }
-
-  if (step === "image") {
-    return (
-      <ImageOcrStep
-        currentStep={STEP_NUMBER.image}
-        totalSteps={3}
-        primaryLabel={isRecognizing ? "Recognizing…" : "Recognize text"}
-        primaryDisabled={!selectedImage || isRecognizing}
-        onBack={() => setStep("language")}
-        onPrimary={() => void recognizeSelectedImage()}
-      >
-        <ImagePicker
-          selectedImage={selectedImage}
-          onSelectedImageChange={setSelectedImage}
-        />
-      </ImageOcrStep>
-    );
-  }
-
-  if (step === "language") {
+  if (state.status === "language") {
     return (
       <ImageOcrStep
         currentStep={STEP_NUMBER.language}
         totalSteps={3}
         primaryLabel="Continue"
-        primaryDisabled={!selectedLanguage}
-        onPrimary={() => setStep("image")}
+        primaryDisabled={!state.selectedLanguage}
+        onPrimary={flow.continueToImage}
       >
         <LanguageSelectionStep
-          value={selectedLanguage}
-          onChange={selectLanguage}
+          value={state.selectedLanguage}
+          onChange={flow.selectLanguage}
         />
       </ImageOcrStep>
     );
   }
 
-  if (isRecognizing) {
+  if (state.status === "image") {
     return (
-      <ImageOcrStep currentStep={STEP_NUMBER.result} totalSteps={3}>
-        <section
-          className={styles.recognitionStatus}
-          aria-live="polite"
-          aria-busy="true"
-          role="status"
-        >
-          <h3
-            className="text-lg font-semibold line-heading"
-            aria-label="Recognizing…"
-          >
-            <span aria-hidden="true">
-              Recognizing
-              <span className={styles.recognitionDotsSlot}>
-                <span>.</span>
-                <span className={styles.recognitionDotTwo}>.</span>
-                <span className={styles.recognitionDotThree}>.</span>
-              </span>
-            </span>
-          </h3>
-          <p className="mt-2 text-muted text-md line-body">
-            This may take up to two minutes
-          </p>
-        </section>
+      <ImageOcrStep
+        currentStep={STEP_NUMBER.image}
+        totalSteps={3}
+        primaryLabel="Recognize text"
+        primaryDisabled={!state.selectedImage}
+        onBack={flow.backToLanguage}
+        onPrimary={flow.startRecognition}
+      >
+        <ImagePicker
+          selectedImage={state.selectedImage}
+          onSelectedImageChange={flow.selectImage}
+        />
       </ImageOcrStep>
     );
   }
 
-  if (recognitionError) {
+  if (state.status === "recognizing") {
+    return (
+      <ImageOcrStep currentStep={STEP_NUMBER.recognizing} totalSteps={3}>
+        <RecognizingStep />
+      </ImageOcrStep>
+    );
+  }
+
+  if (state.status === "error") {
     return (
       <ImageOcrStep
-        currentStep={STEP_NUMBER.result}
+        currentStep={STEP_NUMBER.error}
         totalSteps={3}
         primaryLabel="Back to image"
-        onPrimary={() => setStep("image")}
+        onPrimary={flow.backToImage}
       >
-        <section className={styles.recognitionStatus} role="alert">
-          <h3 className="text-lg font-semibold line-heading">
-            Text could not be recognized
-          </h3>
-          <p className="mt-2 text-danger text-md line-body">
-            {recognitionError}
-          </p>
-        </section>
+        <RecognitionErrorStep message={state.message} />
       </ImageOcrStep>
     );
   }
 
   return (
     <ImageOcrStep
-      currentStep={STEP_NUMBER.result}
+      currentStep={STEP_NUMBER.review}
       totalSteps={3}
       footer={
         <footer className={styles.resultNavigation}>
           <button
             type="button"
             className="button px-5 py-3"
-            onClick={() => setStep("image")}
+            onClick={flow.backToImage}
           >
             Back
           </button>
@@ -274,9 +107,9 @@ export default function ImageOcrWizard({
             <button
               type="button"
               className="button px-5 py-3"
-              disabled={!recognizedText.trim()}
+              disabled={!state.recognizedText.trim()}
               onClick={() =>
-                onComplete(appendRecognizedText(text, recognizedText))
+                onComplete(appendRecognizedText(text, state.recognizedText))
               }
             >
               Add to text
@@ -285,8 +118,8 @@ export default function ImageOcrWizard({
           <button
             type="button"
             className="button button-primary px-5 py-3"
-            disabled={!recognizedText.trim()}
-            onClick={() => onComplete(recognizedText)}
+            disabled={!state.recognizedText.trim()}
+            onClick={() => onComplete(state.recognizedText)}
           >
             {text.trim() ? "Replace text" : "Use text"}
           </button>
@@ -294,8 +127,8 @@ export default function ImageOcrWizard({
       }
     >
       <RecognitionResultStep
-        value={recognizedText}
-        onChange={setRecognizedText}
+        value={state.recognizedText}
+        onChange={flow.editRecognizedText}
       />
     </ImageOcrStep>
   );

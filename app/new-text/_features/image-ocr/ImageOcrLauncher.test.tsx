@@ -348,6 +348,30 @@ describe("ImageOcrLauncher", () => {
       .hasAttribute("disabled")).toBe(false);
   });
 
+  it("preserves the selected image when navigating back through language", async () => {
+    const user = userEvent.setup();
+    renderLauncher();
+    await user.click(screen.getByRole("button", { name: "Extract text from image" }));
+    const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
+    await chooseLanguageAndContinue(dialog, user, "Spanish");
+    const file = new File(
+      [new Uint8Array([0xff, 0xd8, 0xff, 0xe0])],
+      "preserved.jpg",
+      { type: "image/jpeg" },
+    );
+
+    await user.upload(within(dialog).getByLabelText("Choose image file"), file);
+    expect(await within(dialog).findByText("preserved.jpg")).toBeTruthy();
+    await user.click(within(dialog).getByRole("button", { name: "Back" }));
+
+    expect(within(dialog).getByRole("combobox", { name: "Text language" }).textContent)
+      .toContain("Spanish");
+    await user.click(within(dialog).getByRole("button", { name: "Continue" }));
+
+    expect(within(dialog).getByText("preserved.jpg")).toBeTruthy();
+    expect(URL.revokeObjectURL).not.toHaveBeenCalledWith("blob:test-image");
+  });
+
   it("recognizes the cropped image and sends reviewed text to the editor", async () => {
     const onTextChange = vi.fn();
     const user = userEvent.setup();
