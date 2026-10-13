@@ -1,9 +1,9 @@
 import type { NextConfig } from "next";
 import path from "node:path";
 
-const ortBundlePath = path.resolve(
+const workerOnlyOrtShimPath = path.resolve(
   process.cwd(),
-  "vendor/ort.bundle.min.mjs",
+  "vendor/onnxruntime-worker-only.mjs",
 );
 
 const nextConfig: NextConfig = {
@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
       };
       config.resolve.alias = {
         ...config.resolve.alias,
-        "ort.bundle.min.mjs": ortBundlePath,
+        "onnxruntime-web$": workerOnlyOrtShimPath,
       };
     }
 
