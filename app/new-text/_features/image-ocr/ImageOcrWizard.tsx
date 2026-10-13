@@ -1,6 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import {
+  readLanguagePreference,
+  STUDY_LANGUAGE_PREFERENCE_KEY,
+  writeLanguagePreference,
+} from "@/lib/languagePreferences";
 import ImageOcrStep from "./ImageOcrStep";
 import ImagePicker, { type SelectedImage } from "./ImagePicker";
 import LanguageSelectionStep from "./LanguageSelectionStep";
@@ -11,14 +16,14 @@ import {
   resultToText,
   type OcrSession,
 } from "./paddleOcr";
-import type { OcrLanguage } from "./ocrLanguages";
+import { isOcrLanguage, type OcrLanguage } from "./ocrLanguages";
 import styles from "./imageOcr.module.scss";
 
 type WizardStep = "image" | "language" | "result";
 
 const STEP_NUMBER: Record<WizardStep, number> = {
-  image: 1,
-  language: 2,
+  language: 1,
+  image: 2,
   result: 3,
 };
 
@@ -43,13 +48,20 @@ function disposeSession(sessionPromise: Promise<OcrSession>) {
     .catch(() => {});
 }
 
+function getPreferredStudyLanguage(): OcrLanguage | "" {
+  const language = readLanguagePreference(STUDY_LANGUAGE_PREFERENCE_KEY);
+  return language && isOcrLanguage(language) ? language : "";
+}
+
 export default function ImageOcrWizard({
   text,
   onComplete,
 }: ImageOcrWizardProps) {
-  const [step, setStep] = useState<WizardStep>("image");
+  const [step, setStep] = useState<WizardStep>("language");
   const [selectedImage, setSelectedImage] = useState<SelectedImage | null>(null);
-  const [selectedLanguage, setSelectedLanguage] = useState<OcrLanguage | "">("");
+  const [selectedLanguage, setSelectedLanguage] = useState<OcrLanguage | "">(
+    getPreferredStudyLanguage,
+  );
   const [recognizedText, setRecognizedText] = useState("");
   const [recognitionError, setRecognitionError] = useState("");
   const [isRecognizing, setIsRecognizing] = useState(false);
@@ -108,19 +120,30 @@ export default function ImageOcrWizard({
     }
   }
 
+  function selectLanguage(language: OcrLanguage | "") {
+    setSelectedLanguage(language);
+    writeLanguagePreference(STUDY_LANGUAGE_PREFERENCE_KEY, language);
+  }
+
   if (step === "image") {
     return (
       <ImageOcrStep
         currentStep={STEP_NUMBER.image}
         totalSteps={3}
-        primaryLabel="Continue"
-        primaryDisabled={!selectedImage}
-        onPrimary={() => setStep("language")}
+        primaryLabel={isRecognizing ? "Recognizing…" : "Recognize text"}
+        primaryDisabled={!selectedImage || isRecognizing}
+        onBack={() => setStep("language")}
+        onPrimary={() => void recognizeSelectedImage()}
       >
         <ImagePicker
           selectedImage={selectedImage}
           onSelectedImageChange={setSelectedImage}
         />
+        {recognitionError && (
+          <p className="mt-3 text-danger text-sm" role="alert">
+            {recognitionError}
+          </p>
+        )}
       </ImageOcrStep>
     );
   }
@@ -130,20 +153,14 @@ export default function ImageOcrWizard({
       <ImageOcrStep
         currentStep={STEP_NUMBER.language}
         totalSteps={3}
-        primaryLabel={isRecognizing ? "Recognizing…" : "Recognize text"}
-        primaryDisabled={!selectedLanguage || isRecognizing}
-        onBack={() => setStep("image")}
-        onPrimary={() => void recognizeSelectedImage()}
+        primaryLabel="Continue"
+        primaryDisabled={!selectedLanguage}
+        onPrimary={() => setStep("image")}
       >
         <LanguageSelectionStep
           value={selectedLanguage}
-          onChange={setSelectedLanguage}
+          onChange={selectLanguage}
         />
-        {recognitionError && (
-          <p className="mt-3 text-danger text-sm" role="alert">
-            {recognitionError}
-          </p>
-        )}
       </ImageOcrStep>
     );
   }
@@ -157,7 +174,7 @@ export default function ImageOcrWizard({
           <button
             type="button"
             className="button px-5 py-3"
-            onClick={() => setStep("language")}
+            onClick={() => setStep("image")}
           >
             Back
           </button>

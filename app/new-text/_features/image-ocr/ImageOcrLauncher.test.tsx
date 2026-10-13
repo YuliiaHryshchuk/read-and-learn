@@ -52,8 +52,24 @@ function renderLauncher({
   );
 }
 
+async function chooseLanguageAndContinue(
+  dialog: HTMLElement,
+  user: ReturnType<typeof userEvent.setup>,
+  language = "English",
+) {
+  const dropdown = within(dialog).getByRole("combobox", {
+    name: "Text language",
+  });
+  if (!dropdown.textContent?.includes(language)) {
+    await user.click(dropdown);
+    await user.click(within(dialog).getByRole("option", { name: language }));
+  }
+  await user.click(within(dialog).getByRole("button", { name: "Continue" }));
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
+  localStorage.clear();
   ocrMocks.createOcrSession.mockImplementation(async () => ({
     dispose: ocrMocks.dispose,
     recognize: ocrMocks.recognize,
@@ -148,6 +164,7 @@ describe("ImageOcrLauncher", () => {
       name: "Extract text from image",
     }));
     const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
+    await chooseLanguageAndContinue(dialog, user);
 
     expect(within(dialog).getByRole("button", { name: "Choose image" })).toBeTruthy();
     expect(within(dialog).queryByRole("button", { name: "Take a photo" })).toBeNull();
@@ -165,6 +182,7 @@ describe("ImageOcrLauncher", () => {
 
     await user.click(screen.getByRole("button", { name: "Extract text from image" }));
     const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
+    await chooseLanguageAndContinue(dialog, user);
 
     expect(within(dialog).getByRole("button", { name: "Take a photo" })).toBeTruthy();
     expect(within(dialog).getByLabelText("Take a photo").getAttribute("capture"))
@@ -176,6 +194,7 @@ describe("ImageOcrLauncher", () => {
     renderLauncher();
     await user.click(screen.getByRole("button", { name: "Extract text from image" }));
     const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
+    await chooseLanguageAndContinue(dialog, user);
     const file = new File(
       [new Uint8Array([0xff, 0xd8, 0xff, 0xe0])],
       "lesson.jpg",
@@ -190,11 +209,12 @@ describe("ImageOcrLauncher", () => {
     expect(URL.createObjectURL).toHaveBeenCalledWith(file);
   });
 
-  it("lets the user rotate the selected image before choosing a language", async () => {
+  it("lets the user rotate the selected image after choosing a language", async () => {
     const user = userEvent.setup();
     renderLauncher();
     await user.click(screen.getByRole("button", { name: "Extract text from image" }));
     const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
+    await chooseLanguageAndContinue(dialog, user);
     const file = new File(
       [new Uint8Array([0xff, 0xd8, 0xff, 0xe0])],
       "lesson.jpg",
@@ -223,6 +243,7 @@ describe("ImageOcrLauncher", () => {
     renderLauncher();
     await user.click(screen.getByRole("button", { name: "Extract text from image" }));
     const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
+    await chooseLanguageAndContinue(dialog, user);
     const input = within(dialog).getByLabelText("Choose image file");
     const firstFile = new File(
       [new Uint8Array([0xff, 0xd8, 0xff, 0xe0])],
@@ -258,6 +279,7 @@ describe("ImageOcrLauncher", () => {
     renderLauncher();
     await user.click(screen.getByRole("button", { name: "Extract text from image" }));
     const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
+    await chooseLanguageAndContinue(dialog, user);
     const file = new File(
       [new Uint8Array([0xff, 0xd8, 0xff, 0xe0])],
       "pending.jpg",
@@ -279,23 +301,13 @@ describe("ImageOcrLauncher", () => {
     expect(URL.createObjectURL).not.toHaveBeenCalled();
   });
 
-  it("continues to the language step and keeps the image when going back", async () => {
+  it("chooses a supported language before selecting an image", async () => {
     const user = userEvent.setup();
     renderLauncher();
     await user.click(screen.getByRole("button", { name: "Extract text from image" }));
     const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
-    const file = new File(
-      [new Uint8Array([0xff, 0xd8, 0xff, 0xe0])],
-      "lesson.jpg",
-      { type: "image/jpeg" },
-    );
-
     const continueButton = within(dialog).getByRole("button", { name: "Continue" });
     expect(continueButton.hasAttribute("disabled")).toBe(true);
-    await user.upload(within(dialog).getByLabelText("Choose image file"), file);
-    await waitFor(() => expect(continueButton.hasAttribute("disabled")).toBe(false));
-
-    await user.click(continueButton);
     expect(within(dialog).getByRole("heading", { name: "Choose the image language" }))
       .toBeTruthy();
     const languageDropdown = within(dialog).getByRole("combobox", {
@@ -309,14 +321,30 @@ describe("ImageOcrLauncher", () => {
     expect(within(dialog).queryByRole("option", { name: "Russian" })).toBeNull();
     await user.click(within(dialog).getByRole("option", { name: "Spanish" }));
     expect(languageDropdown.textContent).toContain("Spanish");
-    expect(within(dialog).getByRole("button", { name: "Recognize text" })
-      .hasAttribute("disabled")).toBe(false);
+    expect(localStorage.getItem("preferredStudyLanguage")).toBe("es");
+    expect(continueButton.hasAttribute("disabled")).toBe(false);
 
+    await user.click(continueButton);
+    expect(within(dialog).getByRole("button", { name: "Choose image" })).toBeTruthy();
+    expect(within(dialog).getByRole("button", { name: "Recognize text" })
+      .hasAttribute("disabled")).toBe(true);
     await user.click(within(dialog).getByRole("button", { name: "Back" }));
-    expect(within(dialog).getByText("lesson.jpg")).toBeTruthy();
-    await user.click(within(dialog).getByRole("button", { name: "Continue" }));
     expect(within(dialog).getByRole("combobox", { name: "Text language" }).textContent)
       .toContain("Spanish");
+  });
+
+  it("uses the preferred study language as the image-language default", async () => {
+    localStorage.setItem("preferredStudyLanguage", "es");
+    const user = userEvent.setup();
+    renderLauncher();
+
+    await user.click(screen.getByRole("button", { name: "Extract text from image" }));
+    const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
+
+    expect(within(dialog).getByRole("combobox", { name: "Text language" }).textContent)
+      .toContain("Spanish");
+    expect(within(dialog).getByRole("button", { name: "Continue" })
+      .hasAttribute("disabled")).toBe(false);
   });
 
   it("recognizes the cropped image and sends reviewed text to the editor", async () => {
@@ -325,6 +353,7 @@ describe("ImageOcrLauncher", () => {
     renderLauncher({ onTextChange });
     await user.click(screen.getByRole("button", { name: "Extract text from image" }));
     const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
+    await chooseLanguageAndContinue(dialog, user, "Spanish");
     const file = new File(
       [new Uint8Array([0xff, 0xd8, 0xff, 0xe0])],
       "spanish.jpg",
@@ -332,9 +361,6 @@ describe("ImageOcrLauncher", () => {
     );
 
     await user.upload(within(dialog).getByLabelText("Choose image file"), file);
-    await user.click(within(dialog).getByRole("button", { name: "Continue" }));
-    await user.click(within(dialog).getByRole("combobox", { name: "Text language" }));
-    await user.click(within(dialog).getByRole("option", { name: "Spanish" }));
     await user.click(within(dialog).getByRole("button", { name: "Recognize text" }));
 
     const result = await within(dialog).findByLabelText("Recognized text");
@@ -363,6 +389,7 @@ describe("ImageOcrLauncher", () => {
     renderLauncher();
     await user.click(screen.getByRole("button", { name: "Extract text from image" }));
     const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
+    await chooseLanguageAndContinue(dialog, user);
     const file = new File(
       [new Uint8Array([0xff, 0xd8, 0xff, 0xe0])],
       "pending.jpg",
@@ -370,9 +397,6 @@ describe("ImageOcrLauncher", () => {
     );
 
     await user.upload(within(dialog).getByLabelText("Choose image file"), file);
-    await user.click(within(dialog).getByRole("button", { name: "Continue" }));
-    await user.click(within(dialog).getByRole("combobox", { name: "Text language" }));
-    await user.click(within(dialog).getByRole("option", { name: "English" }));
     await user.click(within(dialog).getByRole("button", { name: "Recognize text" }));
     await waitFor(() => expect(ocrMocks.createOcrSession).toHaveBeenCalledTimes(1));
 
@@ -397,6 +421,7 @@ describe("ImageOcrLauncher", () => {
     renderLauncher();
     await user.click(screen.getByRole("button", { name: "Extract text from image" }));
     const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
+    await chooseLanguageAndContinue(dialog, user);
     const input = within(dialog).getByLabelText("Choose image file");
     const unsupported = new File(["GIF89a"], "image.gif", { type: "image/gif" });
 
@@ -420,6 +445,7 @@ describe("ImageOcrLauncher", () => {
     renderLauncher();
     await user.click(screen.getByRole("button", { name: "Extract text from image" }));
     const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
+    await chooseLanguageAndContinue(dialog, user);
     const firstFile = new File(
       [new Uint8Array([0xff, 0xd8, 0xff, 0xe0])],
       "first.jpg",
