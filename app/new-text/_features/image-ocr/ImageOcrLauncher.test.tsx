@@ -373,6 +373,65 @@ describe("ImageOcrLauncher", () => {
       .toBeNull();
   });
 
+  it("moves to a locked result step while recognition is running", async () => {
+    let resolveRecognition!: (result: { items: never[] }) => void;
+    const pendingRecognition = new Promise<{ items: never[] }>((resolve) => {
+      resolveRecognition = resolve;
+    });
+    ocrMocks.recognize.mockReturnValueOnce(pendingRecognition);
+    const user = userEvent.setup();
+    renderLauncher();
+    await user.click(screen.getByRole("button", { name: "Extract text from image" }));
+    const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
+    await chooseLanguageAndContinue(dialog, user);
+    const file = new File(
+      [new Uint8Array([0xff, 0xd8, 0xff, 0xe0])],
+      "pending.jpg",
+      { type: "image/jpeg" },
+    );
+
+    await user.upload(within(dialog).getByLabelText("Choose image file"), file);
+    await user.click(within(dialog).getByRole("button", { name: "Recognize text" }));
+
+    expect(within(dialog).getByText("Step 3 of 3")).toBeTruthy();
+    expect(within(dialog).getByRole("heading", { name: "Recognizing…" }))
+      .toBeTruthy();
+    expect(within(dialog).queryByRole("button", { name: "Back" })).toBeNull();
+    expect(within(dialog).queryByRole("button", { name: "Recognize text" })).toBeNull();
+    expect(within(dialog).queryByRole("button", { name: "Choose another image" }))
+      .toBeNull();
+
+    await act(async () => {
+      resolveRecognition({ items: [] });
+      await pendingRecognition;
+    });
+    expect(await within(dialog).findByLabelText("Recognized text")).toBeTruthy();
+  });
+
+  it("shows recognition errors on the result step and returns to the image", async () => {
+    ocrMocks.recognize.mockRejectedValueOnce(new Error("Recognition failed."));
+    const user = userEvent.setup();
+    renderLauncher();
+    await user.click(screen.getByRole("button", { name: "Extract text from image" }));
+    const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
+    await chooseLanguageAndContinue(dialog, user);
+    const file = new File(
+      [new Uint8Array([0xff, 0xd8, 0xff, 0xe0])],
+      "failed.jpg",
+      { type: "image/jpeg" },
+    );
+
+    await user.upload(within(dialog).getByLabelText("Choose image file"), file);
+    await user.click(within(dialog).getByRole("button", { name: "Recognize text" }));
+
+    const alert = await within(dialog).findByRole("alert");
+    expect(alert.textContent).toContain("Text could not be recognized");
+    expect(alert.textContent).toContain("Recognition failed.");
+    await user.click(within(dialog).getByRole("button", { name: "Back to image" }));
+    expect(within(dialog).getByText("failed.jpg")).toBeTruthy();
+    expect(within(dialog).getByRole("button", { name: "Recognize text" })).toBeTruthy();
+  });
+
   it("disposes a pending OCR worker when the dialog closes", async () => {
     let resolveSession!: (session: {
       dispose: typeof ocrMocks.dispose;
@@ -399,6 +458,8 @@ describe("ImageOcrLauncher", () => {
     await user.upload(within(dialog).getByLabelText("Choose image file"), file);
     await user.click(within(dialog).getByRole("button", { name: "Recognize text" }));
     await waitFor(() => expect(ocrMocks.createOcrSession).toHaveBeenCalledTimes(1));
+    expect(within(dialog).getByRole("heading", { name: "Recognizing…" }))
+      .toBeTruthy();
 
     await user.click(within(dialog).getByRole("button", {
       name: "Close image text dialog",

@@ -11,11 +11,7 @@ import ImagePicker, { type SelectedImage } from "./ImagePicker";
 import LanguageSelectionStep from "./LanguageSelectionStep";
 import RecognitionResultStep from "./RecognitionResultStep";
 import { createCroppedImageBlob } from "./cropImage";
-import {
-  createOcrSession,
-  resultToText,
-  type OcrSession,
-} from "./paddleOcr";
+import { createOcrSession, resultToText, type OcrSession } from "./paddleOcr";
 import { isOcrLanguage, type OcrLanguage } from "./ocrLanguages";
 import styles from "./imageOcr.module.scss";
 
@@ -43,9 +39,7 @@ function getRecognitionError(error: unknown) {
 }
 
 function disposeSession(sessionPromise: Promise<OcrSession>) {
-  void sessionPromise
-    .then((session) => session.dispose())
-    .catch(() => {});
+  void sessionPromise.then((session) => session.dispose()).catch(() => {});
 }
 
 function getPreferredStudyLanguage(): OcrLanguage | "" {
@@ -58,7 +52,9 @@ export default function ImageOcrWizard({
   onComplete,
 }: ImageOcrWizardProps) {
   const [step, setStep] = useState<WizardStep>("language");
-  const [selectedImage, setSelectedImage] = useState<SelectedImage | null>(null);
+  const [selectedImage, setSelectedImage] = useState<SelectedImage | null>(
+    null,
+  );
   const [selectedLanguage, setSelectedLanguage] = useState<OcrLanguage | "">(
     getPreferredStudyLanguage,
   );
@@ -90,6 +86,7 @@ export default function ImageOcrWizard({
 
     setIsRecognizing(true);
     setRecognitionError("");
+    setStep("result");
 
     let sessionPromise: Promise<OcrSession> | null = null;
 
@@ -139,11 +136,6 @@ export default function ImageOcrWizard({
           selectedImage={selectedImage}
           onSelectedImageChange={setSelectedImage}
         />
-        {recognitionError && (
-          <p className="mt-3 text-danger text-sm" role="alert">
-            {recognitionError}
-          </p>
-        )}
       </ImageOcrStep>
     );
   }
@@ -165,11 +157,61 @@ export default function ImageOcrWizard({
     );
   }
 
+  if (isRecognizing) {
+    return (
+      <ImageOcrStep currentStep={STEP_NUMBER.result} totalSteps={3}>
+        <section
+          className={styles.recognitionStatus}
+          aria-live="polite"
+          aria-busy="true"
+          role="status"
+        >
+          <h3
+            className="text-lg font-semibold line-heading"
+            aria-label="Recognizing…"
+          >
+            <span aria-hidden="true">
+              Recognizing
+              <span className={styles.recognitionDotsSlot}>
+                <span>.</span>
+                <span className={styles.recognitionDotTwo}>.</span>
+                <span className={styles.recognitionDotThree}>.</span>
+              </span>
+            </span>
+          </h3>
+          <p className="mt-2 text-muted text-md line-body">
+            This may take a minute
+          </p>
+        </section>
+      </ImageOcrStep>
+    );
+  }
+
+  if (recognitionError) {
+    return (
+      <ImageOcrStep
+        currentStep={STEP_NUMBER.result}
+        totalSteps={3}
+        primaryLabel="Back to image"
+        onPrimary={() => setStep("image")}
+      >
+        <section className={styles.recognitionStatus} role="alert">
+          <h3 className="text-lg font-semibold line-heading">
+            Text could not be recognized
+          </h3>
+          <p className="mt-2 text-danger text-md line-body">
+            {recognitionError}
+          </p>
+        </section>
+      </ImageOcrStep>
+    );
+  }
+
   return (
     <ImageOcrStep
       currentStep={STEP_NUMBER.result}
       totalSteps={3}
-      footer={(
+      footer={
         <footer className={styles.resultNavigation}>
           <button
             type="button"
@@ -183,7 +225,9 @@ export default function ImageOcrWizard({
               type="button"
               className="button px-5 py-3"
               disabled={!recognizedText.trim()}
-              onClick={() => onComplete(appendRecognizedText(text, recognizedText))}
+              onClick={() =>
+                onComplete(appendRecognizedText(text, recognizedText))
+              }
             >
               Add to text
             </button>
@@ -197,7 +241,7 @@ export default function ImageOcrWizard({
             {text.trim() ? "Replace text" : "Use text"}
           </button>
         </footer>
-      )}
+      }
     >
       <RecognitionResultStep
         value={recognizedText}
@@ -206,4 +250,3 @@ export default function ImageOcrWizard({
     </ImageOcrStep>
   );
 }
-

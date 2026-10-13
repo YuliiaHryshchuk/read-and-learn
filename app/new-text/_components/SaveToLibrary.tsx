@@ -1,6 +1,12 @@
 "use client";
 
-import { useRef, useState, type FormEvent, type MouseEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type MouseEvent,
+} from "react";
 import { useRouter } from "next/navigation";
 import { usePuterAuth } from "@/components/PuterAuthProvider";
 import { saveMaterial } from "@/lib/api/materialsClient";
@@ -9,17 +15,21 @@ import { useTextStore } from "@/stores/useTextStore";
 
 export default function SaveToLibrary() {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const resetDraftOnUnmountRef = useRef(false);
   const router = useRouter();
   const { requireAuthToken } = usePuterAuth();
-  const clearDraft = useTextStore((state) => state.setText);
-  const clearResult = useTextStore((state) => state.clearResult);
+  const startNewText = useTextStore((state) => state.startNewText);
   const editingMaterial = useTextStore((state) => state.editingMaterial);
-  const clearEditingMaterial = useTextStore((state) => state.clearEditingMaterial);
   const result = useTextStore((state) => state.result);
   const targetLanguage = useTextStore((state) => state.targetLanguage);
   const [title, setTitle] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isOpeningLibrary, setIsOpeningLibrary] = useState(false);
   const [message, setMessage] = useState("");
+
+  useEffect(() => () => {
+    if (resetDraftOnUnmountRef.current) startNewText();
+  }, [startNewText]);
 
   function openDialog() {
     setTitle(editingMaterial?.title ?? "");
@@ -28,6 +38,7 @@ export default function SaveToLibrary() {
   }
 
   function closeDialog() {
+    if (isSaving) return;
     dialogRef.current?.close();
   }
 
@@ -41,6 +52,7 @@ export default function SaveToLibrary() {
 
     setIsSaving(true);
     setMessage("");
+    let saved = false;
 
     try {
       const authToken = await requireAuthToken();
@@ -57,10 +69,9 @@ export default function SaveToLibrary() {
         editingMaterial?.id,
       );
 
-      closeDialog();
-      clearDraft("");
-      clearResult();
-      clearEditingMaterial();
+      saved = true;
+      resetDraftOnUnmountRef.current = true;
+      setIsOpeningLibrary(true);
       router.push("/library");
     } catch (error) {
       setMessage(
@@ -69,7 +80,7 @@ export default function SaveToLibrary() {
           : "The material could not be saved.",
       );
     } finally {
-      setIsSaving(false);
+      if (!saved) setIsSaving(false);
     }
   }
 
@@ -90,6 +101,9 @@ export default function SaveToLibrary() {
         className="modal-dialog"
         aria-labelledby="save-to-library-title"
         onClick={closeOnBackdrop}
+        onCancel={(event) => {
+          if (isSaving) event.preventDefault();
+        }}
       >
         <section className="modal-card p-5 mobile-p-4">
           <header className="d-flex align-items-center justify-content-between gap-4 mb-4">
@@ -103,6 +117,7 @@ export default function SaveToLibrary() {
               type="button"
               className="button-icon flex-none"
               aria-label="Close save dialog"
+              disabled={isSaving}
               onClick={closeDialog}
             >
               ×
@@ -134,7 +149,7 @@ export default function SaveToLibrary() {
               className="button button-primary px-5 py-3 mobile-width-100"
               disabled={isSaving}
             >
-              {isSaving ? "Saving…" : "Save"}
+              {isOpeningLibrary ? "Opening library…" : isSaving ? "Saving…" : "Save"}
             </button>
           </form>
           {message && (
