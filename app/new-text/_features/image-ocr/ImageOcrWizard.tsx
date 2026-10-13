@@ -17,6 +17,17 @@ import styles from "./imageOcr.module.scss";
 
 type WizardStep = "image" | "language" | "result";
 
+const RECOGNITION_TIMEOUT_MS = 120_000;
+
+class RecognitionTimeoutError extends Error {
+  constructor() {
+    super(
+      "Text recognition took too long. This browser may not support local recognition. Try another browser or image.",
+    );
+    this.name = "RecognitionTimeoutError";
+  }
+}
+
 const STEP_NUMBER: Record<WizardStep, number> = {
   language: 1,
   image: 2,
@@ -42,6 +53,26 @@ function disposeSession(sessionPromise: Promise<OcrSession>) {
   void sessionPromise.then((session) => session.dispose()).catch(() => {});
 }
 
+function raceWithAbort<T>(operation: Promise<T>, signal: AbortSignal) {
+  if (signal.aborted) return Promise.reject(signal.reason);
+
+  return new Promise<T>((resolve, reject) => {
+    const abort = () => reject(signal.reason);
+    signal.addEventListener("abort", abort, { once: true });
+
+    operation.then(
+      (value) => {
+        signal.removeEventListener("abort", abort);
+        resolve(value);
+      },
+      (error: unknown) => {
+        signal.removeEventListener("abort", abort);
+        reject(error);
+      },
+    );
+  });
+}
+
 function getPreferredStudyLanguage(): OcrLanguage | "" {
   const language = readLanguagePreference(STUDY_LANGUAGE_PREFERENCE_KEY);
   return language && isOcrLanguage(language) ? language : "";
@@ -62,6 +93,7 @@ export default function ImageOcrWizard({
   const [recognitionError, setRecognitionError] = useState("");
   const [isRecognizing, setIsRecognizing] = useState(false);
   const activeSessionRef = useRef<Promise<OcrSession> | null>(null);
+  const activeRecognitionRef = useRef<AbortController | null>(null);
   const isMountedRef = useRef(true);
   const previewUrl = selectedImage?.previewUrl;
 
@@ -70,6 +102,8 @@ export default function ImageOcrWizard({
 
     return () => {
       isMountedRef.current = false;
+      activeRecognitionRef.current?.abort();
+      activeRecognitionRef.current = null;
       const activeSession = activeSessionRef.current;
       activeSessionRef.current = null;
       if (activeSession) disposeSession(activeSession);
@@ -88,19 +122,31 @@ export default function ImageOcrWizard({
     setRecognitionError("");
     setStep("result");
 
+    const recognitionController = new AbortController();
+    activeRecognitionRef.current = recognitionController;
+    const timeoutId = window.setTimeout(() => {
+      recognitionController.abort(new RecognitionTimeoutError());
+    }, RECOGNITION_TIMEOUT_MS);
     let sessionPromise: Promise<OcrSession> | null = null;
 
     try {
-      const image = await createCroppedImageBlob(selectedImage);
-      if (!isMountedRef.current) return;
+      const recognition = (async () => {
+        const image = await createCroppedImageBlob(selectedImage);
+        if (!isMountedRef.current) return null;
 
-      sessionPromise = createOcrSession(selectedLanguage);
-      activeSessionRef.current = sessionPromise;
-      const session = await sessionPromise;
-      if (!isMountedRef.current) return;
+        sessionPromise = createOcrSession(selectedLanguage);
+        activeSessionRef.current = sessionPromise;
+        const session = await sessionPromise;
+        if (!isMountedRef.current) return null;
 
-      const result = await session.recognize(image);
+        return session.recognize(image);
+      })();
+      const result = await raceWithAbort(
+        recognition,
+        recognitionController.signal,
+      );
       if (!isMountedRef.current) return;
+      if (!result) return;
 
       setRecognizedText(resultToText(result));
       setStep("result");
@@ -109,6 +155,10 @@ export default function ImageOcrWizard({
         setRecognitionError(getRecognitionError(error));
       }
     } finally {
+      window.clearTimeout(timeoutId);
+      if (activeRecognitionRef.current === recognitionController) {
+        activeRecognitionRef.current = null;
+      }
       if (sessionPromise && activeSessionRef.current === sessionPromise) {
         activeSessionRef.current = null;
         disposeSession(sessionPromise);
@@ -180,7 +230,7 @@ export default function ImageOcrWizard({
             </span>
           </h3>
           <p className="mt-2 text-muted text-md line-body">
-            This may take a minute
+            This may take up to two minutes
           </p>
         </section>
       </ImageOcrStep>

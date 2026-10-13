@@ -29,6 +29,7 @@ describe("PaddleOCR session", () => {
     await session.dispose();
 
     expect(paddleMocks.create).toHaveBeenCalledWith(expect.objectContaining({
+      initialize: false,
       worker: true,
       ortOptions: {
         backend: "wasm",

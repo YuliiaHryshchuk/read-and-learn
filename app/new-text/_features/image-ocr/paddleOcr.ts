@@ -1,5 +1,6 @@
 import type { OcrResult } from "@paddleocr/paddleocr-js";
 import type { OcrLanguage } from "./ocrLanguages";
+import { createWorkerOrtOptions } from "./paddleOcrCompatibility";
 
 const DETECTION_MODEL_URL =
   "/ocr/models/PP-OCRv6_small_det_onnx_infer.bin";
@@ -30,16 +31,14 @@ async function createClient(language: OcrLanguage): Promise<OcrClient> {
     textDetectionModelAsset: { url: DETECTION_MODEL_URL },
     textRecognitionModelName: "PP-OCRv6_small_rec",
     textRecognitionModelAsset: { url: RECOGNITION_MODEL_URL },
+    initialize: false,
     worker: true,
-    ortOptions: {
+    ortOptions: createWorkerOrtOptions({
       backend: "wasm",
-      // PaddleOCR 0.4.2 still types this option as a string, while its
-      // ONNX Runtime 1.30 dependency also accepts explicit module/binary URLs.
-      // Explicit URLs prevent ORT from selecting the oversized JSEP build.
-      wasmPaths: WASM_PATHS as unknown as string,
+      wasmPaths: WASM_PATHS,
       numThreads: 1,
       simd: true,
-    },
+    }),
   });
 }
 

@@ -170,7 +170,7 @@ importers:
         specifier: ^2.6.3
         version: 2.6.3(supports-color@7.2.0)
       '@paddleocr/paddleocr-js':
-        specifier: ^0.4.2
+        specifier: 0.4.2
         version: 0.4.2
       next:
         specifier: 16.3.5

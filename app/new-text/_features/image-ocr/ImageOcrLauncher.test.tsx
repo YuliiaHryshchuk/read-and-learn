@@ -95,6 +95,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   cleanup();
   Reflect.deleteProperty(URL, "createObjectURL");
   Reflect.deleteProperty(URL, "revokeObjectURL");
@@ -406,6 +407,41 @@ describe("ImageOcrLauncher", () => {
       await pendingRecognition;
     });
     expect(await within(dialog).findByLabelText("Recognized text")).toBeTruthy();
+  });
+
+  it("shows an error when recognition never finishes", async () => {
+    ocrMocks.recognize.mockReturnValueOnce(new Promise(() => {}));
+    const user = userEvent.setup();
+    renderLauncher();
+    await user.click(screen.getByRole("button", { name: "Extract text from image" }));
+    const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
+    await chooseLanguageAndContinue(dialog, user);
+    const file = new File(
+      [new Uint8Array([0xff, 0xd8, 0xff, 0xe0])],
+      "hanging.jpg",
+      { type: "image/jpeg" },
+    );
+
+    await user.upload(within(dialog).getByLabelText("Choose image file"), file);
+    vi.useFakeTimers();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Recognize text" }));
+
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(within(dialog).getByRole("heading", { name: "Recognizing…" }))
+      .toBeTruthy();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(120_000);
+    });
+
+    const alert = within(dialog).getByRole("alert");
+    expect(alert.textContent).toContain("Text recognition took too long");
+    expect(within(dialog).getByRole("button", { name: "Back to image" }))
+      .toBeTruthy();
+    expect(ocrMocks.dispose).toHaveBeenCalledTimes(1);
   });
 
   it("shows recognition errors on the result step and returns to the image", async () => {

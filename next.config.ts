@@ -5,6 +5,10 @@ const workerOnlyOrtShimPath = path.resolve(
   process.cwd(),
   "vendor/onnxruntime-worker-only.mjs",
 );
+const workerOnlyOpenCvShimPath = path.resolve(
+  process.cwd(),
+  "vendor/opencv-worker-only.mjs",
+);
 
 const nextConfig: NextConfig = {
   output: "export",
@@ -18,6 +22,7 @@ const nextConfig: NextConfig = {
       };
       config.resolve.alias = {
         ...config.resolve.alias,
+        "@techstark/opencv-js$": workerOnlyOpenCvShimPath,
         "onnxruntime-web$": workerOnlyOrtShimPath,
       };
     }

@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@heyputer/puter.js": "^2.6.3",
-    "@paddleocr/paddleocr-js": "^0.4.2",
+    "@paddleocr/paddleocr-js": "0.4.2",
     "next": "16.3.5",
     "onnxruntime-web": "1.30.0",
     "react": "19.2.8",
