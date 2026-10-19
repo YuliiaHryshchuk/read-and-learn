@@ -1,0 +1,23 @@
+:3000 {
+	@api path /api /api/*
+	@libraryShell path_regexp libraryShell ^/library/[^/]+/?$
+	@editShell path_regexp editShell ^/edit/[^/]+/?$
+
+	handle @api {
+		reverse_proxy pages:8788
+	}
+
+	handle @libraryShell {
+		rewrite * /library/material
+		reverse_proxy next:3001
+	}
+
+	handle @editShell {
+		rewrite * /edit/material
+		reverse_proxy next:3001
+	}
+
+	handle {
+		reverse_proxy next:3001
+	}
+}

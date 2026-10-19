@@ -13,6 +13,6 @@ RUN pnpm install --frozen-lockfile
 
 COPY . .
 
-EXPOSE 3000
+EXPOSE 3001
 
-CMD ["pnpm", "dev:docker"]
+CMD ["pnpm", "dev:next:docker"]
