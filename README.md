@@ -1,6 +1,8 @@
-# Study Reader
+# Read & Learn
 
-Learn languages through adapted texts, translations, and focused explanations.
+Read texts in the language you are learning without constantly looking up every
+unfamiliar word. Add a text, review focused explanations and translations, and
+then read the original without breaking your flow.
 
 ## Run locally with Docker
 
@@ -13,7 +15,7 @@ Learn languages through adapted texts, translations, and focused explanations.
 ### Start the project
 
 1. Clone or unpack the project.
-2. Open a terminal in the `study-reader-web` directory.
+2. Open a terminal in the cloned project directory.
 3. Run:
 
    ```sh
@@ -81,6 +83,6 @@ pnpm hooks:install
 ```
 
 The pre-push hook blocks direct pushes to `main`. Push a feature branch and
-merge it through a GitHub pull request instead. Git hooks are a local safeguard
-and can be bypassed with `git push --no-verify` when an emergency override is
-deliberately required.
+merge it through a GitHub pull request instead. Git hooks are a local safeguard:
+`git push --no-verify` skips the local hook but does not bypass the server-side
+GitHub rules that protect `main`.
