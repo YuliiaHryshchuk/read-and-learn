@@ -2,7 +2,7 @@
 
 Start date: September 17, 2026
 
-Last updated: October 10, 2026
+Last updated: October 19, 2026
 
 ## 1. Project goals
 
@@ -94,7 +94,7 @@ Response requirements:
 | Styles               | SCSS and SCSS Modules                                      |
 | AI                   | Puter AI, `gpt-5.4-mini` via `azure-openai-responses`      |
 | Authentication       | Puter                                                      |
-| Local development    | Docker Compose, Next.js dev, and local D1                  |
+| Local development    | Docker Compose, Caddy, Next.js dev, Wrangler, and local D1 |
 | Tests                | Vitest; live Puter checks are performed separately by hand |
 
 A separate Python service and a custom model are not planned for the current scope.
@@ -114,11 +114,12 @@ Read & Learn remains responsible for clearly handling Puter errors: missing auth
 ### 3.3. Docker and local development
 
 - Docker Compose remains a supported method for local startup and for handing the project over to other developers.
-- The current Compose project is named `read-and-learn` and starts one web container.
-- The container applies local D1 migrations, starts the Cloudflare Pages runtime, and proxies the Next.js development server.
+- The `read-and-learn` Compose project is split into a Next.js development server, the Wrangler Pages runtime, and a local Caddy gateway.
+- Caddy sends API requests to Wrangler and pages, assets, and HMR to Next.js; saved-material and editor URLs use their statically generated shell routes.
+- Wrangler runs in the supported directory-based mode without its deprecated proxy.
 - The application is available at `http://localhost:3000`.
 - Local D1 data is persisted in `.wrangler`.
-- The pinned Wrangler version supports the current proxy-dev flow; the warning about future removal of proxy mode remains a reason to revisit local startup later.
+- Production remains a static Next.js export in `out`; Caddy is local-only and is not part of deployment.
 
 ### 3.4. Git and documentation
 
@@ -365,3 +366,21 @@ OCR: local browser-only feature module; engine not selected
 - [ ] Consider SWR only when additional requests and a need for cache invalidation appear.
 - [ ] Automate production D1 migrations only after choosing a safe deployment and recovery procedure.
 - [ ] Modernize the local Wrangler flow before the currently supported proxy mode is removed.
+
+## 7. Project state as of October 19, 2026
+
+### 7.1. Local Docker architecture
+
+The previous Docker flow ran `next dev` through Wrangler's proxy mode. After `pages_build_output_dir: "./out"` was added, Wrangler received both a built directory and a proxy command, which are mutually exclusive modes. Removing `out` avoided the immediate error but left the project dependent on a deprecated proxy API that will be removed from Wrangler.
+
+The local environment is now split into three services:
+
+```text
+Browser :3000 -> Caddy
+                  |-- /api/* -> Wrangler Pages Functions -> local D1
+                  `-- pages and HMR -> Next.js dev
+```
+
+Caddy preserves a single origin and maps dynamic library and editor URLs to their static shell routes. This keeps HMR, Pages Functions, and local D1 available together without the deprecated Wrangler proxy.
+
+The solution does not change production: Next.js still produces a static `out` directory, Cloudflare Pages serves it together with Pages Functions, and Caddy exists only in the Docker development environment. A separate production-like check builds `out` and then serves it through Wrangler.

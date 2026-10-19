@@ -1,19 +1,39 @@
 name: read-and-learn
 
 services:
-  web:
+  next:
     build: .
-    command: pnpm dev:docker
-    ports:
-      - "3000:3000"
+    command: pnpm dev:next:docker
+    expose:
+      - "3001"
     environment:
       WATCHPACK_POLLING: "true"
       CHOKIDAR_USEPOLLING: "true"
-      CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV: "false"
     volumes:
       - .:/app
       - web_node_modules_debian:/app/node_modules
       - web_next:/app/.next
+
+  pages:
+    build: .
+    command: pnpm dev:pages:docker
+    expose:
+      - "8788"
+    environment:
+      CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV: "false"
+    volumes:
+      - .:/app
+      - web_node_modules_debian:/app/node_modules
+
+  gateway:
+    image: caddy:2-alpine
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - next
+      - pages
 
 volumes:
   web_node_modules_debian:

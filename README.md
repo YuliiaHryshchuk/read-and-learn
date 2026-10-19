@@ -25,7 +25,8 @@ then read the original without breaking your flow.
 4. Wait until the logs contain:
 
    ```text
-   Ready on http://0.0.0.0:3000
+   next-1     | Ready
+   pages-1    | Ready on http://0.0.0.0:8788
    ```
 
 5. Open http://localhost:3000.
@@ -34,11 +35,32 @@ The command automatically:
 
 - installs the container dependencies;
 - applies all pending migrations to the local Cloudflare D1 database;
-- starts the Cloudflare Pages runtime and API functions;
-- starts the Next.js development server with automatic browser reloads.
+- starts the Next.js development server with Hot Module Replacement (HMR);
+- starts the Cloudflare Pages runtime, API functions, and local D1 database;
+- starts a local Caddy gateway on port 3000.
+
+Caddy sends `/api/*` requests to the Cloudflare Pages runtime and application
+pages to the Next.js development server. Saved-material and editor URLs are
+internally mapped to their statically generated shells while the real material
+ID remains in the browser URL. Caddy and this routing are used only for local
+development; they are not included in the production deployment.
 
 The first build can take a few minutes. Later launches can use the same command;
 Docker will reuse cached image layers when the dependencies have not changed.
+
+### Preview the production build
+
+To verify the actual static export without the development server, stop Docker
+Compose and run:
+
+```sh
+pnpm preview:pages
+```
+
+This command builds the static site into `out` and serves it together with the
+Pages Functions and local D1 database through Wrangler. Unlike the Docker
+development stack, this mode does not provide HMR; rebuild after making changes.
+The production Cloudflare Pages deployment uses the same static `out` directory.
 
 ### Local data
 
