@@ -2,11 +2,11 @@
 
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { SelectedImage } from "./ImagePicker";
+import type { SelectedImage } from "./imageOcrTypes";
 import useImageOcrFlow from "./useImageOcrFlow";
 
 const flowMocks = vi.hoisted(() => ({
-  createCroppedImageBlob: vi.fn(async () => (
+  prepareImageForOcr: vi.fn(async () => (
     new Blob(["image"], { type: "image/jpeg" })
   )),
   createOcrSession: vi.fn(),
@@ -16,7 +16,7 @@ const flowMocks = vi.hoisted(() => ({
 }));
 
 vi.mock("./cropImage", () => ({
-  createCroppedImageBlob: flowMocks.createCroppedImageBlob,
+  prepareImageForOcr: flowMocks.prepareImageForOcr,
 }));
 
 vi.mock("./paddleOcr", () => ({
@@ -28,7 +28,7 @@ function createSelectedImage(name = "lesson.jpg"): SelectedImage {
   return {
     crop: { unit: "%", x: 0, y: 0, width: 100, height: 100 },
     file: new File(["image"], name, { type: "image/jpeg" }),
-    previewUrl: `blob:${name}`,
+    metadata: { format: "jpeg", width: 1600, height: 1200 },
     rotation: 0,
   };
 }
@@ -40,15 +40,10 @@ beforeEach(() => {
     dispose: flowMocks.dispose,
     recognize: flowMocks.recognize,
   }));
-  Object.defineProperty(URL, "revokeObjectURL", {
-    configurable: true,
-    value: vi.fn(),
-  });
 });
 
 afterEach(() => {
   cleanup();
-  Reflect.deleteProperty(URL, "revokeObjectURL");
 });
 
 describe("useImageOcrFlow", () => {
@@ -95,26 +90,10 @@ describe("useImageOcrFlow", () => {
       selectedImage,
       recognizedText: "Recognized text",
     });
-    expect(flowMocks.createCroppedImageBlob).toHaveBeenCalledWith(selectedImage);
+    expect(flowMocks.prepareImageForOcr).toHaveBeenCalledWith(selectedImage);
     expect(flowMocks.createOcrSession).toHaveBeenCalledWith("en");
     expect(flowMocks.recognize).toHaveBeenCalledTimes(1);
     await waitFor(() => expect(flowMocks.dispose).toHaveBeenCalledTimes(1));
   });
 
-  it("revokes replaced and unmounted image preview URLs", () => {
-    const firstImage = createSelectedImage("first.jpg");
-    const secondImage = createSelectedImage("second.jpg");
-    const { result, unmount } = renderHook(() => useImageOcrFlow());
-
-    act(() => result.current.selectLanguage("en"));
-    act(() => result.current.continueToImage());
-    act(() => result.current.selectImage(firstImage));
-    act(() => result.current.selectImage(secondImage));
-
-    expect(URL.revokeObjectURL).toHaveBeenCalledWith(firstImage.previewUrl);
-    expect(URL.revokeObjectURL).not.toHaveBeenCalledWith(secondImage.previewUrl);
-
-    unmount();
-    expect(URL.revokeObjectURL).toHaveBeenCalledWith(secondImage.previewUrl);
-  });
 });

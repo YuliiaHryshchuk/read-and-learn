@@ -1,31 +1,32 @@
-import type { PercentCrop } from "react-image-crop";
-import type { SelectedImage } from "./ImagePicker";
-import type { ImageRotation } from "./ImageCropEditor";
+import {
+  applyCroppedRotationTransform,
+  getConstrainedDimensions,
+  getRotatedDimensions,
+  isFullImageCrop,
+  percentCropToPixels,
+} from "./imageGeometry";
+import type { SelectedImage } from "./imageOcrTypes";
 
-const MAX_OCR_IMAGE_SIDE = 4000;
-const OUTPUT_TYPE = "image/jpeg";
-const OUTPUT_QUALITY = 0.94;
+export const MAX_OCR_IMAGE_PIXELS = 8_000_000;
+export const MAX_OCR_IMAGE_SIDE = 4000;
 
-function loadImage(url: string) {
-  return new Promise<HTMLImageElement>((resolve, reject) => {
-    const image = new Image();
-    image.decoding = "async";
-    image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error("The selected image could not be opened."));
-    image.src = url;
-  });
-}
+const JPEG_OUTPUT_QUALITY = 0.92;
 
-function canvasToBlob(canvas: HTMLCanvasElement) {
+function canvasToBlob(canvas: HTMLCanvasElement, type: string) {
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob(
       (blob) => blob
         ? resolve(blob)
         : reject(new Error("The selected image could not be prepared for OCR.")),
-      OUTPUT_TYPE,
-      OUTPUT_QUALITY,
+      type,
+      type === "image/jpeg" ? JPEG_OUTPUT_QUALITY : undefined,
     );
   });
+}
+
+function isWithinOcrLimits(width: number, height: number) {
+  return Math.max(width, height) <= MAX_OCR_IMAGE_SIDE
+    && width * height <= MAX_OCR_IMAGE_PIXELS;
 }
 
 function releaseCanvas(canvas: HTMLCanvasElement | null) {
@@ -34,93 +35,82 @@ function releaseCanvas(canvas: HTMLCanvasElement | null) {
   canvas.height = 0;
 }
 
-function drawRotatedImage(
-  image: HTMLImageElement,
-  rotation: ImageRotation,
-) {
-  const scale = Math.min(
-    1,
-    MAX_OCR_IMAGE_SIDE / Math.max(image.naturalWidth, image.naturalHeight),
-  );
-  const sourceWidth = Math.max(1, Math.round(image.naturalWidth * scale));
-  const sourceHeight = Math.max(1, Math.round(image.naturalHeight * scale));
-  const swapsDimensions = rotation === 90 || rotation === 270;
-  const canvas = document.createElement("canvas");
-
-  canvas.width = swapsDimensions ? sourceHeight : sourceWidth;
-  canvas.height = swapsDimensions ? sourceWidth : sourceHeight;
-
-  const context = canvas.getContext("2d");
-  if (!context) throw new Error("Image processing is not supported in this browser.");
-
-  context.fillStyle = "#ffffff";
-  context.fillRect(0, 0, canvas.width, canvas.height);
-  context.imageSmoothingEnabled = true;
-  context.imageSmoothingQuality = "high";
-
-  if (rotation === 90) {
-    context.translate(canvas.width, 0);
-    context.rotate(Math.PI / 2);
-  } else if (rotation === 180) {
-    context.translate(canvas.width, canvas.height);
-    context.rotate(Math.PI);
-  } else if (rotation === 270) {
-    context.translate(0, canvas.height);
-    context.rotate(-Math.PI / 2);
+export async function prepareImageForOcr({
+  crop,
+  file,
+  metadata,
+  rotation,
+}: SelectedImage): Promise<Blob> {
+  if (
+    rotation === 0
+    && isFullImageCrop(crop)
+    && isWithinOcrLimits(metadata.width, metadata.height)
+  ) {
+    return file;
   }
 
-  context.drawImage(image, 0, 0, sourceWidth, sourceHeight);
-  return canvas;
-}
-
-function cropPixels(crop: PercentCrop, width: number, height: number) {
-  const x = Math.max(0, Math.round(width * crop.x / 100));
-  const y = Math.max(0, Math.round(height * crop.y / 100));
-  const cropWidth = Math.max(1, Math.min(width - x, Math.round(width * crop.width / 100)));
-  const cropHeight = Math.max(1, Math.min(height - y, Math.round(height * crop.height / 100)));
-
-  return { x, y, width: cropWidth, height: cropHeight };
-}
-
-export async function createCroppedImageBlob({
-  crop,
-  previewUrl,
-  rotation,
-}: SelectedImage) {
-  const image = await loadImage(previewUrl);
-  let rotatedCanvas: HTMLCanvasElement | null = null;
+  const bitmapDimensions = getConstrainedDimensions(
+    metadata.width,
+    metadata.height,
+    MAX_OCR_IMAGE_SIDE,
+    MAX_OCR_IMAGE_PIXELS,
+  );
+  const bitmap = await createImageBitmap(file, {
+    imageOrientation: "from-image",
+    resizeHeight: bitmapDimensions.height,
+    resizeQuality: "high",
+    resizeWidth: bitmapDimensions.width,
+  });
   let outputCanvas: HTMLCanvasElement | null = null;
 
   try {
-    rotatedCanvas = drawRotatedImage(image, rotation);
-    const pixels = cropPixels(crop, rotatedCanvas.width, rotatedCanvas.height);
+    const rotatedDimensions = getRotatedDimensions(
+      bitmap.width,
+      bitmap.height,
+      rotation,
+    );
+    const cropPixels = percentCropToPixels(
+      crop,
+      rotatedDimensions.width,
+      rotatedDimensions.height,
+    );
+    const outputDimensions = getConstrainedDimensions(
+      cropPixels.width,
+      cropPixels.height,
+      MAX_OCR_IMAGE_SIDE,
+      MAX_OCR_IMAGE_PIXELS,
+    );
+    const outputScale = Math.min(
+      outputDimensions.width / cropPixels.width,
+      outputDimensions.height / cropPixels.height,
+    );
+
     outputCanvas = document.createElement("canvas");
-    outputCanvas.width = pixels.width;
-    outputCanvas.height = pixels.height;
+    outputCanvas.width = outputDimensions.width;
+    outputCanvas.height = outputDimensions.height;
 
     const context = outputCanvas.getContext("2d");
-    if (!context) throw new Error("Image processing is not supported in this browser.");
+    if (!context) {
+      throw new Error("Image processing is not supported in this browser.");
+    }
 
     context.fillStyle = "#ffffff";
     context.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
-    context.drawImage(
-      rotatedCanvas,
-      pixels.x,
-      pixels.y,
-      pixels.width,
-      pixels.height,
-      0,
-      0,
-      pixels.width,
-      pixels.height,
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = "high";
+    applyCroppedRotationTransform(
+      context,
+      bitmap.width,
+      bitmap.height,
+      cropPixels,
+      outputScale,
+      rotation,
     );
+    context.drawImage(bitmap, 0, 0);
 
-    return await canvasToBlob(outputCanvas);
+    return await canvasToBlob(outputCanvas, file.type);
   } finally {
-    image.onload = null;
-    image.onerror = null;
-    image.removeAttribute("src");
     releaseCanvas(outputCanvas);
-    releaseCanvas(rotatedCanvas);
+    bitmap.close();
   }
 }

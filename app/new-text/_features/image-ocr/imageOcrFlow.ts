@@ -1,4 +1,4 @@
-import type { SelectedImage } from "./ImagePicker";
+import type { SelectedImage } from "./imageOcrTypes";
 import type { OcrLanguage } from "./ocrLanguages";
 
 type LanguageState = {

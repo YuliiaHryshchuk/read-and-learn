@@ -6,13 +6,13 @@ import {
   imageOcrFlowReducer,
   type ImageOcrFlowState,
 } from "./imageOcrFlow";
-import type { SelectedImage } from "./ImagePicker";
+import type { SelectedImage } from "./imageOcrTypes";
 
 function createSelectedImage(name = "lesson.jpg"): SelectedImage {
   return {
     crop: { unit: "%", x: 10, y: 15, width: 70, height: 60 },
     file: new File(["image"], name, { type: "image/jpeg" }),
-    previewUrl: `blob:${name}`,
+    metadata: { format: "jpeg", width: 1600, height: 1200 },
     rotation: 90,
   };
 }

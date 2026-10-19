@@ -20,8 +20,28 @@ vi.mock("next/image", () => ({
 }));
 
 vi.mock("./cropImage", () => ({
-  createCroppedImageBlob: vi.fn(async () => new Blob(["image"], { type: "image/jpeg" })),
+  prepareImageForOcr: vi.fn(async () => new Blob(["image"], { type: "image/jpeg" })),
 }));
+
+const JPEG_BYTES = new Uint8Array([
+  0xff, 0xd8,
+  0xff, 0xc0, 0x00, 0x11, 0x08,
+  0x03, 0x00,
+  0x04, 0x00,
+  0x03,
+  0x01, 0x11, 0x00,
+  0x02, 0x11, 0x00,
+  0x03, 0x11, 0x00,
+  0xff, 0xd9,
+]);
+
+const PNG_BYTES = new Uint8Array([
+  0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+  0x00, 0x00, 0x00, 0x0d,
+  0x49, 0x48, 0x44, 0x52,
+  0x00, 0x00, 0x04, 0x00,
+  0x00, 0x00, 0x03, 0x00,
+]);
 
 const ocrMocks = vi.hoisted(() => {
   const dispose = vi.fn(async () => {});
@@ -34,6 +54,10 @@ const ocrMocks = vi.hoisted(() => {
     resultToText: vi.fn(() => "Hola mundo"),
   };
 });
+
+const previewMocks = vi.hoisted(() => ({
+  close: vi.fn(),
+}));
 
 vi.mock("./paddleOcr", () => ({
   createOcrSession: ocrMocks.createOcrSession,
@@ -77,13 +101,24 @@ beforeEach(() => {
   ocrMocks.dispose.mockResolvedValue(undefined);
   ocrMocks.recognize.mockResolvedValue({ items: [] });
   ocrMocks.resultToText.mockReturnValue("Hola mundo");
-  Object.defineProperty(URL, "createObjectURL", {
+  Object.defineProperty(globalThis, "createImageBitmap", {
     configurable: true,
-    value: vi.fn(() => "blob:test-image"),
+    value: vi.fn(async (_file: Blob, options?: ImageBitmapOptions) => ({
+      close: previewMocks.close,
+      height: options?.resizeHeight ?? 900,
+      width: options?.resizeWidth ?? 1200,
+    })),
   });
-  Object.defineProperty(URL, "revokeObjectURL", {
+  Object.defineProperty(HTMLCanvasElement.prototype, "getContext", {
     configurable: true,
-    value: vi.fn(),
+    value: vi.fn(() => ({
+      drawImage: vi.fn(),
+      fillRect: vi.fn(),
+      fillStyle: "",
+      imageSmoothingEnabled: false,
+      imageSmoothingQuality: "low",
+      setTransform: vi.fn(),
+    })),
   });
   HTMLDialogElement.prototype.showModal = function showModal() {
     this.setAttribute("open", "");
@@ -97,8 +132,8 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers();
   cleanup();
-  Reflect.deleteProperty(URL, "createObjectURL");
-  Reflect.deleteProperty(URL, "revokeObjectURL");
+  Reflect.deleteProperty(globalThis, "createImageBitmap");
+  Reflect.deleteProperty(HTMLCanvasElement.prototype, "getContext");
   Reflect.deleteProperty(navigator, "userAgentData");
 });
 
@@ -197,7 +232,7 @@ describe("ImageOcrLauncher", () => {
     const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
     await chooseLanguageAndContinue(dialog, user);
     const file = new File(
-      [new Uint8Array([0xff, 0xd8, 0xff, 0xe0])],
+      [JPEG_BYTES],
       "lesson.jpg",
       { type: "image/jpeg" },
     );
@@ -207,7 +242,10 @@ describe("ImageOcrLauncher", () => {
     expect(await within(dialog).findByText("lesson.jpg")).toBeTruthy();
     expect(within(dialog).getByRole("img", { name: "Selected image preview" }))
       .toBeTruthy();
-    expect(URL.createObjectURL).toHaveBeenCalledWith(file);
+    await waitFor(() => expect(createImageBitmap).toHaveBeenCalledWith(
+      file,
+      expect.objectContaining({ resizeHeight: 768, resizeWidth: 1024 }),
+    ));
   });
 
   it("lets the user rotate the selected image after choosing a language", async () => {
@@ -217,7 +255,7 @@ describe("ImageOcrLauncher", () => {
     const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
     await chooseLanguageAndContinue(dialog, user);
     const file = new File(
-      [new Uint8Array([0xff, 0xd8, 0xff, 0xe0])],
+      [JPEG_BYTES],
       "lesson.jpg",
       { type: "image/jpeg" },
     );
@@ -237,9 +275,6 @@ describe("ImageOcrLauncher", () => {
   });
 
   it("replaces the preview when another valid image is selected", async () => {
-    vi.mocked(URL.createObjectURL)
-      .mockReturnValueOnce("blob:first-image")
-      .mockReturnValueOnce("blob:second-image");
     const user = userEvent.setup();
     renderLauncher();
     await user.click(screen.getByRole("button", { name: "Extract text from image" }));
@@ -247,12 +282,12 @@ describe("ImageOcrLauncher", () => {
     await chooseLanguageAndContinue(dialog, user);
     const input = within(dialog).getByLabelText("Choose image file");
     const firstFile = new File(
-      [new Uint8Array([0xff, 0xd8, 0xff, 0xe0])],
+      [JPEG_BYTES],
       "first.jpg",
       { type: "image/jpeg" },
     );
     const secondFile = new File(
-      [new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])],
+      [PNG_BYTES],
       "second.png",
       { type: "image/png" },
     );
@@ -267,11 +302,11 @@ describe("ImageOcrLauncher", () => {
     expect(await within(dialog).findByText("second.png")).toBeTruthy();
     expect(within(dialog).queryByText("first.jpg")).toBeNull();
     expect(within(dialog).getByRole("img", { name: "Selected image preview" })
-      .getAttribute("data-image-src")).toBe("blob:second-image");
-    expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:first-image");
+      .getAttribute("data-file-name")).toBe("second.png");
+    await waitFor(() => expect(previewMocks.close).toHaveBeenCalledTimes(1));
   });
 
-  it("does not create a preview URL when the dialog closes during validation", async () => {
+  it("does not decode a preview when the dialog closes during validation", async () => {
     let resolveBytes!: (bytes: ArrayBuffer) => void;
     const pendingBytes = new Promise<ArrayBuffer>((resolve) => {
       resolveBytes = resolve;
@@ -282,7 +317,7 @@ describe("ImageOcrLauncher", () => {
     const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
     await chooseLanguageAndContinue(dialog, user);
     const file = new File(
-      [new Uint8Array([0xff, 0xd8, 0xff, 0xe0])],
+      [JPEG_BYTES],
       "pending.jpg",
       { type: "image/jpeg" },
     );
@@ -299,7 +334,7 @@ describe("ImageOcrLauncher", () => {
       await pendingBytes;
     });
 
-    expect(URL.createObjectURL).not.toHaveBeenCalled();
+    expect(createImageBitmap).not.toHaveBeenCalled();
   });
 
   it("chooses a supported language before selecting an image", async () => {
@@ -355,7 +390,7 @@ describe("ImageOcrLauncher", () => {
     const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
     await chooseLanguageAndContinue(dialog, user, "Spanish");
     const file = new File(
-      [new Uint8Array([0xff, 0xd8, 0xff, 0xe0])],
+      [JPEG_BYTES],
       "preserved.jpg",
       { type: "image/jpeg" },
     );
@@ -369,7 +404,6 @@ describe("ImageOcrLauncher", () => {
     await user.click(within(dialog).getByRole("button", { name: "Continue" }));
 
     expect(within(dialog).getByText("preserved.jpg")).toBeTruthy();
-    expect(URL.revokeObjectURL).not.toHaveBeenCalledWith("blob:test-image");
   });
 
   it("recognizes the cropped image and sends reviewed text to the editor", async () => {
@@ -380,7 +414,7 @@ describe("ImageOcrLauncher", () => {
     const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
     await chooseLanguageAndContinue(dialog, user, "Spanish");
     const file = new File(
-      [new Uint8Array([0xff, 0xd8, 0xff, 0xe0])],
+      [JPEG_BYTES],
       "spanish.jpg",
       { type: "image/jpeg" },
     );
@@ -410,7 +444,7 @@ describe("ImageOcrLauncher", () => {
     const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
     await chooseLanguageAndContinue(dialog, user);
     const file = new File(
-      [new Uint8Array([0xff, 0xd8, 0xff, 0xe0])],
+      [JPEG_BYTES],
       "pending.jpg",
       { type: "image/jpeg" },
     );
@@ -441,7 +475,7 @@ describe("ImageOcrLauncher", () => {
     const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
     await chooseLanguageAndContinue(dialog, user);
     const file = new File(
-      [new Uint8Array([0xff, 0xd8, 0xff, 0xe0])],
+      [JPEG_BYTES],
       "hanging.jpg",
       { type: "image/jpeg" },
     );
@@ -476,7 +510,7 @@ describe("ImageOcrLauncher", () => {
     const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
     await chooseLanguageAndContinue(dialog, user);
     const file = new File(
-      [new Uint8Array([0xff, 0xd8, 0xff, 0xe0])],
+      [JPEG_BYTES],
       "failed.jpg",
       { type: "image/jpeg" },
     );
@@ -510,7 +544,7 @@ describe("ImageOcrLauncher", () => {
     const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
     await chooseLanguageAndContinue(dialog, user);
     const file = new File(
-      [new Uint8Array([0xff, 0xd8, 0xff, 0xe0])],
+      [JPEG_BYTES],
       "pending.jpg",
       { type: "image/jpeg" },
     );
@@ -534,7 +568,6 @@ describe("ImageOcrLauncher", () => {
 
     await waitFor(() => expect(ocrMocks.dispose).toHaveBeenCalledTimes(1));
     expect(ocrMocks.recognize).not.toHaveBeenCalled();
-    expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:test-image");
   });
 
   it("rejects unsupported and oversized files", async () => {
@@ -568,7 +601,7 @@ describe("ImageOcrLauncher", () => {
     const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
     await chooseLanguageAndContinue(dialog, user);
     const firstFile = new File(
-      [new Uint8Array([0xff, 0xd8, 0xff, 0xe0])],
+      [JPEG_BYTES],
       "first.jpg",
       { type: "image/jpeg" },
     );

@@ -11,8 +11,9 @@ import {
   type DragEvent,
 } from "react";
 import type { PercentCrop } from "react-image-crop";
-import ImageCropEditor, { type ImageRotation } from "./ImageCropEditor";
-import { getImageFileError, IMAGE_ACCEPT } from "./imageFileValidation";
+import ImageCropEditor from "./ImageCropEditor";
+import { IMAGE_ACCEPT, validateImageFile } from "./imageFileValidation";
+import type { ImageRotation, SelectedImage } from "./imageOcrTypes";
 import styles from "./imageOcr.module.scss";
 import { isMobileDevice } from "./mobileDevice";
 
@@ -27,12 +28,7 @@ function formatFileSize(size: number) {
   return `${(size / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export type SelectedImage = {
-  crop: PercentCrop;
-  file: File;
-  previewUrl: string;
-  rotation: ImageRotation;
-};
+export type { SelectedImage } from "./imageOcrTypes";
 
 const FULL_IMAGE_CROP: PercentCrop = {
   unit: "%",
@@ -77,19 +73,19 @@ export default function ImagePicker({
     }
 
     const file = files[0];
-    const error = await getImageFileError(file);
+    const validation = await validateImageFile(file);
     if (requestId !== selectionRequestRef.current) return;
-    if (error) {
+    if (validation.metadata === null) {
       setMessage(selectedImage
-        ? `${error} The previous image is still selected.`
-        : error);
+        ? `${validation.error} The previous image is still selected.`
+        : validation.error);
       return;
     }
 
     onSelectedImageChange({
       crop: FULL_IMAGE_CROP,
       file,
-      previewUrl: URL.createObjectURL(file),
+      metadata: validation.metadata,
       rotation: 0,
     });
   }
@@ -173,7 +169,7 @@ export default function ImagePicker({
   );
 
   if (selectedImage) {
-    const { crop, file: selectedFile, previewUrl, rotation } = selectedImage;
+    const { crop, file: selectedFile, metadata, rotation } = selectedImage;
     return (
       <div className={styles.selectedImage}>
         {inputs}
@@ -184,7 +180,8 @@ export default function ImagePicker({
         )}
         <ImageCropEditor
           crop={crop}
-          previewUrl={previewUrl}
+          file={selectedFile}
+          metadata={metadata}
           rotation={rotation}
           onCropChange={updateCrop}
           onImageError={handleImageError}

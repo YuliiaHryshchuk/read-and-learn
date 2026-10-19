@@ -6,12 +6,12 @@ import {
   STUDY_LANGUAGE_PREFERENCE_KEY,
   writeLanguagePreference,
 } from "@/lib/languagePreferences";
-import { createCroppedImageBlob } from "./cropImage";
+import { prepareImageForOcr } from "./cropImage";
 import {
   createInitialImageOcrFlowState,
   imageOcrFlowReducer,
 } from "./imageOcrFlow";
-import type { SelectedImage } from "./ImagePicker";
+import type { SelectedImage } from "./imageOcrTypes";
 import { isOcrLanguage, type OcrLanguage } from "./ocrLanguages";
 import { createOcrSession, resultToText, type OcrSession } from "./paddleOcr";
 
@@ -67,13 +67,6 @@ export default function useImageOcrFlow() {
     () => createInitialImageOcrFlowState(getPreferredStudyLanguage()),
   );
   const nextAttemptIdRef = useRef(0);
-  const previewUrl = state.selectedImage?.previewUrl;
-
-  useEffect(() => {
-    if (!previewUrl) return;
-    return () => URL.revokeObjectURL(previewUrl);
-  }, [previewUrl]);
-
   useEffect(() => {
     if (state.status !== "recognizing") return;
 
@@ -95,7 +88,7 @@ export default function useImageOcrFlow() {
     async function recognize() {
       try {
         const recognition = (async () => {
-          const image = await createCroppedImageBlob(selectedImage);
+          const image = await prepareImageForOcr(selectedImage);
           recognitionController.signal.throwIfAborted();
 
           sessionPromise = createOcrSession(selectedLanguage);

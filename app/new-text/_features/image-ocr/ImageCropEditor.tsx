@@ -1,85 +1,130 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReactCrop, { type PercentCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
+import {
+  applyCroppedRotationTransform,
+  getConstrainedDimensions,
+  getRotatedDimensions,
+} from "./imageGeometry";
+import type {
+  ImageFileMetadata,
+  ImageRotation,
+} from "./imageOcrTypes";
 import styles from "./imageOcr.module.scss";
 
 const MAX_PREVIEW_SIDE = 1200;
-
-export type ImageRotation = 0 | 90 | 180 | 270;
+const MAX_PREVIEW_PIXELS = MAX_PREVIEW_SIDE * MAX_PREVIEW_SIDE;
 
 type ImageCropEditorProps = {
   crop: PercentCrop;
-  previewUrl: string;
+  file: File;
+  metadata: ImageFileMetadata;
   rotation: ImageRotation;
   onCropChange: (crop: PercentCrop) => void;
   onImageError: () => void;
 };
 
+type PreviewBitmap = {
+  bitmap: ImageBitmap;
+  file: File;
+};
+
 function drawRotatedPreview(
   canvas: HTMLCanvasElement,
-  image: HTMLImageElement,
+  bitmap: ImageBitmap,
   rotation: ImageRotation,
 ) {
-  const scale = Math.min(
-    1,
-    MAX_PREVIEW_SIDE / Math.max(image.naturalWidth, image.naturalHeight),
+  const dimensions = getRotatedDimensions(
+    bitmap.width,
+    bitmap.height,
+    rotation,
   );
-  const sourceWidth = Math.max(1, Math.round(image.naturalWidth * scale));
-  const sourceHeight = Math.max(1, Math.round(image.naturalHeight * scale));
-  const swapsDimensions = rotation === 90 || rotation === 270;
-
-  canvas.width = swapsDimensions ? sourceHeight : sourceWidth;
-  canvas.height = swapsDimensions ? sourceWidth : sourceHeight;
+  canvas.width = dimensions.width;
+  canvas.height = dimensions.height;
 
   const context = canvas.getContext("2d");
   if (!context) return;
 
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, canvas.width, canvas.height);
   context.imageSmoothingEnabled = true;
   context.imageSmoothingQuality = "high";
-
-  if (rotation === 90) {
-    context.translate(canvas.width, 0);
-    context.rotate(Math.PI / 2);
-  } else if (rotation === 180) {
-    context.translate(canvas.width, canvas.height);
-    context.rotate(Math.PI);
-  } else if (rotation === 270) {
-    context.translate(0, canvas.height);
-    context.rotate(-Math.PI / 2);
-  }
-
-  context.drawImage(image, 0, 0, sourceWidth, sourceHeight);
+  applyCroppedRotationTransform(
+    context,
+    bitmap.width,
+    bitmap.height,
+    { x: 0, y: 0, ...dimensions },
+    1,
+    rotation,
+  );
+  context.drawImage(bitmap, 0, 0);
 }
 
 export default function ImageCropEditor({
   crop,
-  previewUrl,
+  file,
+  metadata,
   rotation,
   onCropChange,
   onImageError,
 }: ImageCropEditorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const onImageErrorRef = useRef(onImageError);
+  const [preview, setPreview] = useState<PreviewBitmap | null>(null);
+
+  useEffect(() => {
+    onImageErrorRef.current = onImageError;
+  }, [onImageError]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const image = new window.Image();
-    image.decoding = "async";
-    image.onload = () => drawRotatedPreview(canvas, image, rotation);
-    image.onerror = onImageError;
-    image.src = previewUrl;
-
-    return () => {
-      image.onload = null;
-      image.onerror = null;
-      image.removeAttribute("src");
+    if (canvas) {
       canvas.width = 0;
       canvas.height = 0;
+    }
+
+    const dimensions = getConstrainedDimensions(
+      metadata.width,
+      metadata.height,
+      MAX_PREVIEW_SIDE,
+      MAX_PREVIEW_PIXELS,
+    );
+    let cancelled = false;
+    let activeBitmap: ImageBitmap | null = null;
+
+    void createImageBitmap(file, {
+      imageOrientation: "from-image",
+      resizeHeight: dimensions.height,
+      resizeQuality: "high",
+      resizeWidth: dimensions.width,
+    }).then((bitmap) => {
+      if (cancelled) {
+        bitmap.close();
+        return;
+      }
+      activeBitmap = bitmap;
+      setPreview({ bitmap, file });
+    }).catch(() => {
+      if (!cancelled) onImageErrorRef.current();
+    });
+
+    return () => {
+      cancelled = true;
+      activeBitmap?.close();
+      if (canvas) {
+        canvas.width = 0;
+        canvas.height = 0;
+      }
     };
-  }, [onImageError, previewUrl, rotation]);
+  }, [file, metadata.height, metadata.width]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !preview || preview.file !== file) return;
+    drawRotatedPreview(canvas, preview.bitmap, rotation);
+  }, [file, preview, rotation]);
 
   return (
     <div className={styles.cropEditor}>
@@ -108,7 +153,7 @@ export default function ImageCropEditor({
             className={styles.cropPreview}
             role="img"
             aria-label="Selected image preview"
-            data-image-src={previewUrl}
+            data-file-name={file.name}
             data-rotation={rotation}
           />
         </ReactCrop>
