@@ -13,6 +13,7 @@ const flowMocks = vi.hoisted(() => ({
   dispose: vi.fn(async () => {}),
   recognize: vi.fn(async () => ({ items: [] })),
   resultToText: vi.fn(() => "Recognized text"),
+  containsRecognizableText: vi.fn((text: string) => /[\p{L}\p{N}]/u.test(text)),
 }));
 
 vi.mock("./cropImage", () => ({
@@ -20,6 +21,7 @@ vi.mock("./cropImage", () => ({
 }));
 
 vi.mock("./paddleOcr", () => ({
+  containsRecognizableText: flowMocks.containsRecognizableText,
   createOcrSession: flowMocks.createOcrSession,
   resultToText: flowMocks.resultToText,
 }));
@@ -93,6 +95,26 @@ describe("useImageOcrFlow", () => {
     expect(flowMocks.prepareImageForOcr).toHaveBeenCalledWith(selectedImage);
     expect(flowMocks.createOcrSession).toHaveBeenCalledWith("en");
     expect(flowMocks.recognize).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(flowMocks.dispose).toHaveBeenCalledTimes(1));
+  });
+
+  it("keeps punctuation-only OCR output available for review", async () => {
+    const selectedImage = createSelectedImage();
+    flowMocks.resultToText.mockReturnValueOnce(" ... , — - ;: ");
+    const { result } = renderHook(() => useImageOcrFlow());
+
+    act(() => result.current.selectLanguage("en"));
+    act(() => result.current.continueToImage());
+    act(() => result.current.selectImage(selectedImage));
+    act(() => result.current.startRecognition());
+
+    await waitFor(() => expect(result.current.state.status).toBe("review"));
+    expect(result.current.state).toEqual({
+      status: "review",
+      selectedLanguage: "en",
+      selectedImage,
+      recognizedText: " ... , — - ;: ",
+    });
     await waitFor(() => expect(flowMocks.dispose).toHaveBeenCalledTimes(1));
   });
 

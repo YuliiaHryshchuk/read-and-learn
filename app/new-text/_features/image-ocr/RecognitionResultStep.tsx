@@ -1,3 +1,4 @@
+import { containsRecognizableText } from "./paddleOcr";
 import styles from "./imageOcr.module.scss";
 
 type RecognitionResultStepProps = {
@@ -26,6 +27,15 @@ export default function RecognitionResultStep({
         value={value}
         onChange={(event) => onChange(event.target.value)}
       />
+      {!containsRecognizableText(value) && (
+        <p
+          className={`${styles.resultWarning} text-danger text-md line-body`}
+          role="alert"
+        >
+          Text could not be recognized. Try another language or a higher-quality
+          photo.
+        </p>
+      )}
     </section>
   );
 }

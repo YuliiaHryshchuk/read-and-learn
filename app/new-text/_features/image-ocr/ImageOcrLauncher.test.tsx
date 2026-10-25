@@ -48,6 +48,7 @@ const ocrMocks = vi.hoisted(() => {
   const recognize = vi.fn(async () => ({ items: [] }));
 
   return {
+    containsRecognizableText: (text: string) => /[\p{L}\p{N}]/u.test(text),
     createOcrSession: vi.fn(async () => ({ dispose, recognize })),
     dispose,
     recognize,
@@ -60,6 +61,7 @@ const previewMocks = vi.hoisted(() => ({
 }));
 
 vi.mock("./paddleOcr", () => ({
+  containsRecognizableText: ocrMocks.containsRecognizableText,
   createOcrSession: ocrMocks.createOcrSession,
   resultToText: ocrMocks.resultToText,
 }));
@@ -430,6 +432,29 @@ describe("ImageOcrLauncher", () => {
     expect(onTextChange).toHaveBeenCalledWith("Hola mundo");
     expect(screen.queryByRole("dialog", { name: "Extract text from image" }))
       .toBeNull();
+  });
+
+  it("shows a warning below punctuation-only recognized text", async () => {
+    ocrMocks.resultToText.mockReturnValueOnce("... , — -");
+    const user = userEvent.setup();
+    renderLauncher();
+    await user.click(screen.getByRole("button", { name: "Extract text from image" }));
+    const dialog = await screen.findByRole("dialog", { name: "Extract text from image" });
+    await chooseLanguageAndContinue(dialog, user);
+    const file = new File(
+      [JPEG_BYTES],
+      "punctuation.jpg",
+      { type: "image/jpeg" },
+    );
+
+    await user.upload(within(dialog).getByLabelText("Choose image file"), file);
+    await user.click(within(dialog).getByRole("button", { name: "Recognize text" }));
+
+    const result = await within(dialog).findByLabelText("Recognized text");
+    expect((result as HTMLTextAreaElement).value).toBe("... , — -");
+    expect(within(dialog).getByRole("alert").textContent).toContain(
+      "Try another language or a higher-quality photo.",
+    );
   });
 
   it("moves to a locked result step while recognition is running", async () => {

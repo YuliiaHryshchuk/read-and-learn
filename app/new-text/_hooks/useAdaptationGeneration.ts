@@ -182,5 +182,10 @@ export function useAdaptationGeneration({
     text,
   ]);
 
-  return { generate, generationMessage, isPending };
+  return {
+    clearGenerationMessage: () => setGenerationMessage(null),
+    generate,
+    generationMessage,
+    isPending,
+  };
 }

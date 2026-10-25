@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createOcrSession, resultToText } from "./paddleOcr";
+import {
+  containsRecognizableText,
+  createOcrSession,
+  resultToText,
+} from "./paddleOcr";
 
 const paddleMocks = vi.hoisted(() => ({
   create: vi.fn(),
@@ -53,5 +57,13 @@ describe("PaddleOCR session", () => {
         { text: "Second line" },
       ],
     } as Parameters<typeof resultToText>[0])).toBe("First line\nSecond line");
+  });
+
+  it("distinguishes text from empty or punctuation-only OCR output", () => {
+    expect(containsRecognizableText("Hola, mundo!")).toBe(true);
+    expect(containsRecognizableText("中文")).toBe(true);
+    expect(containsRecognizableText("123")).toBe(true);
+    expect(containsRecognizableText("  ... , — - ;:  ")).toBe(false);
+    expect(containsRecognizableText("\n\t")).toBe(false);
   });
 });

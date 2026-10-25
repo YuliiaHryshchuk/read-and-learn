@@ -65,3 +65,7 @@ export function resultToText(result: OcrResult) {
     .map((item) => item.text.trim())
     .join("\n");
 }
+
+export function containsRecognizableText(text: string) {
+  return /[\p{L}\p{N}]/u.test(text);
+}

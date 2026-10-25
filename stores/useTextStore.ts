@@ -35,6 +35,7 @@ type TextState = {
   setTargetLanguage: (language: string) => void;
   setResult: (result: AdaptationResult, language: string) => void;
   clearResult: () => void;
+  clearAll: () => void;
   startNewText: () => void;
   startEditingMaterial: (material: EditingMaterial & {
     sourceText: string;
@@ -139,6 +140,17 @@ function persistResult(result: AdaptationResult, resultLanguage: string) {
 function removePersistedResult() {
   const key = getResultStorageKey();
   if (!key) return;
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // Storage may be unavailable in privacy-restricted browser contexts.
+  }
+}
+
+function removePersistedDraft() {
+  const key = getScopedStorageKey(STORAGE_NAME);
+  if (!key) return;
+  cancelPendingWrite(key);
   try {
     localStorage.removeItem(key);
   } catch {
@@ -254,6 +266,19 @@ export const useTextStore = create<TextState>()(
           resultLanguage: null,
           hasUnsavedGeneration: false,
         });
+        removePersistedResult();
+      },
+      clearAll: () => {
+        suppressPersistence = true;
+        set({
+          text: "",
+          result: null,
+          resultLanguage: null,
+          editingMaterial: null,
+          hasUnsavedGeneration: false,
+        });
+        suppressPersistence = false;
+        removePersistedDraft();
         removePersistedResult();
       },
       startNewText: () => {

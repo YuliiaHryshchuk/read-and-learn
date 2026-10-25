@@ -205,6 +205,11 @@
   outline: 3px solid var(--focus-accent);
 }
 
+.resultWarning {
+  margin-top: var(--space-3);
+  flex: none;
+}
+
 .resultNavigation {
   display: flex;
   flex: none;

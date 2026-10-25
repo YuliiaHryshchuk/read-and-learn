@@ -13,7 +13,11 @@ import {
 } from "./imageOcrFlow";
 import type { SelectedImage } from "./imageOcrTypes";
 import { isOcrLanguage, type OcrLanguage } from "./ocrLanguages";
-import { createOcrSession, resultToText, type OcrSession } from "./paddleOcr";
+import {
+  createOcrSession,
+  resultToText,
+  type OcrSession,
+} from "./paddleOcr";
 
 const RECOGNITION_TIMEOUT_MS = 120_000;
 
