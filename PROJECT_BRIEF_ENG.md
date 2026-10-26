@@ -2,7 +2,7 @@
 
 Start date: September 17, 2026
 
-Last updated: October 19, 2026
+Last updated: October 26, 2026
 
 ## 1. Project goals
 
@@ -93,6 +93,7 @@ Response requirements:
 | UI                   | React and Next.js                                          |
 | Styles               | SCSS and SCSS Modules                                      |
 | AI                   | Puter AI, `gpt-5.4-mini` via `azure-openai-responses`      |
+| OCR                  | PaddleOCR JS, PP-OCRv6, and ONNX Runtime Web/WASM          |
 | Authentication       | Puter                                                      |
 | Local development    | Docker Compose, Caddy, Next.js dev, Wrangler, and local D1 |
 | Tests                | Vitest; live Puter checks are performed separately by hand |
@@ -217,14 +218,14 @@ This decision reduces cost and operational complexity while preserving the neces
 
 ### 5.5. Next tasks as of this date
 
-- [ ] Implement the D1 schema, Functions, and protected library.
-- [ ] Add saving, reopening, editing, and deleting materials.
-- [ ] Add user selection of the translation and explanation language.
-- [ ] Separate preview and production databases.
-- [ ] Configure CI, production smoke tests, and the Cloudflare deployment flow.
-- [ ] Add unit tests and perform an architectural refactoring of the form.
-- [ ] Improve the mobile layout.
-- [ ] Investigate file and image upload after the core MVP.
+- [x] Implement the D1 schema, Functions, and protected library.
+- [x] Add saving, reopening, editing, and deleting materials.
+- [x] Add user selection of the translation and explanation language.
+- [x] Separate preview and production databases.
+- [x] Configure CI, production smoke tests, and the Cloudflare deployment flow.
+- [x] Add unit tests and perform an architectural refactoring of the form.
+- [x] Improve the mobile layout.
+- [x] Investigate file and image upload after the core MVP.
 
 ## 6. Project state as of October 10, 2026
 
@@ -345,10 +346,10 @@ OCR: local browser-only feature module; engine not selected
 
 #### OCR
 
-- [ ] Select an OCR engine with acceptable quality on real photographs, not only clean scans.
+- [x] Select an OCR engine with acceptable quality on real photographs, not only clean scans.
 - [ ] Evaluate candidates on a set of photographs with different lighting, tilt, fonts, and camera quality.
-- [ ] After selecting an engine, restore the third step: progress, cancellation, an editable result, and the `Text could not be recognized` state.
-- [ ] Connect the `Use this text`, `Replace current text`, and `Add to current text` actions to shared limit validation.
+- [x] After selecting an engine, restore the third step: progress, cancellation, an editable result, and the `Text could not be recognized` state.
+- [x] Connect the `Use this text`, `Replace current text`, and `Add to current text` actions to shared limit validation.
 
 #### Quality and security
 
@@ -365,7 +366,7 @@ OCR: local browser-only feature module; engine not selected
 - [ ] Check the need for an extended D1 index using `EXPLAIN QUERY PLAN`.
 - [ ] Consider SWR only when additional requests and a need for cache invalidation appear.
 - [ ] Automate production D1 migrations only after choosing a safe deployment and recovery procedure.
-- [ ] Modernize the local Wrangler flow before the currently supported proxy mode is removed.
+- [x] Modernize the local Wrangler flow before the currently supported proxy mode is removed.
 
 ## 7. Project state as of October 19, 2026
 
@@ -384,3 +385,52 @@ Browser :3000 -> Caddy
 Caddy preserves a single origin and maps dynamic library and editor URLs to their static shell routes. This keeps HMR, Pages Functions, and local D1 available together without the deprecated Wrangler proxy.
 
 The solution does not change production: Next.js still produces a static `out` directory, Cloudflare Pages serves it together with Pages Functions, and Caddy exists only in the Docker development environment. A separate production-like check builds `out` and then serves it through Wrangler.
+
+## 8. Project state as of October 26, 2026
+
+### 8.1. OCR status
+
+The image-to-text flow has been implemented and connected to the material creation form. The user selects the image language, uploads a JPEG or PNG image or takes a photo on a mobile device, rotates and crops it when necessary, starts recognition, reviews the result in an editable field, and then replaces the current text or appends the result to it.
+
+OCR remains an auxiliary way to populate the regular text field. An image does not become a separate material, is not stored in the library or `localStorage`, and is not sent to Puter, Pages Functions, or D1.
+
+English, Spanish, French, and German are currently available. The selected image language is stored separately as `preferredStudyLanguage` and is used as the initial value the next time the wizard opens when that language is supported by OCR.
+
+### 8.2. Selected OCR architecture
+
+- Tesseract.js has been permanently replaced with `@paddleocr/paddleocr-js` 0.4.2 using the local `PP-OCRv6_small_det` and `PP-OCRv6_small_rec` models.
+- Recognition runs in the browser through ONNX Runtime Web with the WASM backend, SIMD, and one execution thread. PaddleOCR runs in a dedicated worker so that heavy processing does not block the main UI thread.
+- The PaddleOCR models, ONNX Runtime JavaScript module, and WASM file are stored in `public/ocr` and loaded from the application's origin. OCR does not depend on a third-party CDN and does not send photographs to an external service.
+- The OCR module and dialog are loaded lazily only after the recognition feature is opened.
+- Webpack uses worker-only shims for ONNX Runtime and OpenCV. This prevents unnecessary second copies of the heavy runtimes from entering the main-thread bundle; the working versions remain inside the OCR worker.
+- The wizard is implemented as an explicit state machine with `language`, `image`, `recognizing`, `error`, and `review` states. Transitions are centralized in a reducer, and an attempt identifier prevents a stale asynchronous result from changing the state of a newer run.
+- Recognition has a 120-second timeout. The OCR session is disposed after success, failure, timeout, retry, or closing the dialog.
+
+### 8.3. Image preparation and memory limits
+
+The primary goal of image preparation is to avoid creating multiple full-resolution decoded copies of a photograph before OCR starts.
+
+- The format, signature, dimensions, and EXIF orientation are read from the file header. No more than 1 MB is read for validation, and the full image is not decoded at this stage.
+- A separate reduced preview is created with a maximum side of 1,200 pixels and a maximum total of 1,440,000 pixels. When the image is replaced or the component closes, the `ImageBitmap` is closed and the canvas is reset.
+- If the user has not changed the crop or rotation and the source image already fits the OCR limits, a fast path passes the original `File` directly to PaddleOCR without an intermediate canvas or re-encoding.
+- A cropped, rotated, or oversized image is processed using one `ImageBitmap` and one canvas. Resizing is requested directly from `createImageBitmap`, so the application does not need a separate full-resolution working copy before scaling.
+- The image passed to OCR is limited to `MAX_OCR_IMAGE_PIXELS = 8_000_000` and `MAX_OCR_IMAGE_SIDE = 4000`. Aspect ratio is preserved and high-quality smoothing is used.
+- The file format is preserved: PNG is not converted to JPEG unnecessarily; JPEG is encoded at quality 0.92 only when the image has actually been modified.
+- After preparation, the `ImageBitmap` is closed and the canvas dimensions are reset to zero so the browser can release graphics memory earlier.
+
+These measures reduce the memory controlled by the application, especially for photographs from modern phones. However, the PaddleOCR pipeline itself—text-region detection, preparation of detected regions, recognition through ONNX Runtime, and OpenCV operations inside the worker—can still produce a high temporary memory peak. An experimental patch to PaddleOCR's internal processing did not provide a stable improvement and was removed; unverified dependency modifications are not part of the current code.
+
+### 8.4. User flow and local state
+
+- One JPEG/JPG/PNG image up to 10 MB is accepted. The MIME type, extension, content signature, and presence of readable dimensions are validated.
+- A valid selected image is preserved when returning to the language step; an invalid replacement file does not remove the previous valid selection.
+- The OCR result always opens in an editable field. An empty string or a result containing only periods, commas, dashes, and other punctuation does not block the screen, but displays `Text could not be recognized. Try another language or a higher-quality photo.`
+- When the main field is empty, the `Use text` action is available; when text already exists, `Replace text` and `Add to text` are available.
+- The material creation form includes a `Clear all` action without an additional confirmation. It clears the source text, generated translations and explanations, unsaved-generation state, and the corresponding per-user draft/result entries in `localStorage`. Language preferences and authentication are preserved.
+
+### 8.5. Next tasks
+
+- Evaluate OCR on a broader set of real photographs from different phones, with varied lighting, tilt, small fonts, and dense layouts.
+- Investigate HEIC/HEIF support for iPhone photographs separately; the current flow accepts only JPEG/JPG and PNG.
+- Continue measuring the complete browser memory footprint across repeated recognition runs and determine whether PaddleOCR's internal peak can be reduced further without harming quality.
+- Check newer PaddleOCR JS and ONNX Runtime versions before upgrading; remove the temporary `wasmPaths` compatibility helper once the dependency types match the actual API.
