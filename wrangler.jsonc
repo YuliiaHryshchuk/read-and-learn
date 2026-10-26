@@ -2,6 +2,7 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
 
   "name": "read-and-learn",
+  "pages_build_output_dir": "./out",
   "compatibility_date": "2026-09-25",
 
   // Production and locals
