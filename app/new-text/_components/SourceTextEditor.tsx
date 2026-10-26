@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef } from "react";
 import TextContainer from "@/components/TextContainer";
+import ImageOcrLauncher from "../_features/image-ocr/ImageOcrLauncher";
 import type { NewTextMode } from "../_hooks/useMaterialEditor";
 import styles from "../page.module.scss";
 
@@ -16,6 +17,8 @@ type SourceTextEditorProps = {
   isOverWordLimit: boolean;
   disabled: boolean;
   onChange: (text: string) => void;
+  clearAllDisabled?: boolean;
+  onClearAll?: () => void;
 };
 
 export default function SourceTextEditor({
@@ -28,6 +31,8 @@ export default function SourceTextEditor({
   isOverWordLimit,
   disabled,
   onChange,
+  clearAllDisabled = false,
+  onClearAll,
 }: SourceTextEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const hasAppliedInitialFocus = useRef(false);
@@ -64,6 +69,19 @@ export default function SourceTextEditor({
         >
           {wordCount}/{maxWords} words
         </span>,
+        ...(onClearAll
+          ? [
+              <button
+                type="button"
+                className={styles.clearAllButton}
+                disabled={clearAllDisabled}
+                key="clear-all"
+                onClick={onClearAll}
+              >
+                Clear all
+              </button>,
+            ]
+          : []),
       ]}
     >
       <textarea
@@ -76,6 +94,11 @@ export default function SourceTextEditor({
         value={text}
         disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
+      />
+      <ImageOcrLauncher
+        disabled={disabled}
+        text={text}
+        onTextChange={onChange}
       />
     </TextContainer>
   );

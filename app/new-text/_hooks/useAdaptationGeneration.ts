@@ -125,10 +125,6 @@ export function useAdaptationGeneration({
         updatePlan?.fragmentsToProcess ?? splitIntoFragments(text);
 
       if (updatePlan && sourceFragments.length === 0) {
-        setResult(
-          mergeIncrementalAdaptation(updatePlan, []),
-          effectiveTargetLanguage,
-        );
         setGenerationMessage("The explanation is up to date.");
         return;
       }
@@ -186,5 +182,10 @@ export function useAdaptationGeneration({
     text,
   ]);
 
-  return { generate, generationMessage, isPending };
+  return {
+    clearGenerationMessage: () => setGenerationMessage(null),
+    generate,
+    generationMessage,
+    isPending,
+  };
 }

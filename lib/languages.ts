@@ -10,3 +10,5 @@ export const EXPLANATION_LANGUAGES = [
   "German",
   "Russian",
 ] as const;
+
+export type ExplanationLanguage = (typeof EXPLANATION_LANGUAGES)[number];
