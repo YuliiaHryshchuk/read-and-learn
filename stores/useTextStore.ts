@@ -12,6 +12,11 @@ import {
   MAX_TARGET_LANGUAGE_LENGTH,
   TARGET_LANGUAGE,
 } from "@/lib/languages";
+import {
+  EXPLANATION_LANGUAGE_PREFERENCE_KEY,
+  readLanguagePreference,
+  writeLanguagePreference,
+} from "@/lib/languagePreferences";
 
 type EditingMaterial = {
   id: string;
@@ -30,6 +35,7 @@ type TextState = {
   setTargetLanguage: (language: string) => void;
   setResult: (result: AdaptationResult, language: string) => void;
   clearResult: () => void;
+  clearAll: () => void;
   startNewText: () => void;
   startEditingMaterial: (material: EditingMaterial & {
     sourceText: string;
@@ -37,7 +43,6 @@ type TextState = {
     adaptation: StructuredAdaptationResult;
   }) => void;
   clearEditingMaterial: () => void;
-  dismissUnsavedGeneration: () => void;
   finishHydration: () => void;
 };
 
@@ -63,6 +68,11 @@ const initialTextState = {
   | "hasUnsavedGeneration"
   | "hasHydrated"
 >;
+
+function getDefaultTargetLanguage() {
+  return readLanguagePreference(EXPLANATION_LANGUAGE_PREFERENCE_KEY)
+    ?? TARGET_LANGUAGE;
+}
 
 let activeStorageOwner: string | null = null;
 let pendingWrite: { key: string; value: string } | null = null;
@@ -130,6 +140,17 @@ function persistResult(result: AdaptationResult, resultLanguage: string) {
 function removePersistedResult() {
   const key = getResultStorageKey();
   if (!key) return;
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // Storage may be unavailable in privacy-restricted browser contexts.
+  }
+}
+
+function removePersistedDraft() {
+  const key = getScopedStorageKey(STORAGE_NAME);
+  if (!key) return;
+  cancelPendingWrite(key);
   try {
     localStorage.removeItem(key);
   } catch {
@@ -221,14 +242,21 @@ export const useTextStore = create<TextState>()(
         text,
         result: state.result?.kind === "structured" ? state.result : null,
       })),
-      setTargetLanguage: (targetLanguage) => set({ targetLanguage }),
+      setTargetLanguage: (targetLanguage) => {
+        set({ targetLanguage });
+        writeLanguagePreference(
+          EXPLANATION_LANGUAGE_PREFERENCE_KEY,
+          targetLanguage,
+        );
+      },
       setResult: (result, resultLanguage) => {
+        const isEditingSavedMaterial = Boolean(get().editingMaterial);
         set({
           result,
           resultLanguage,
-          hasUnsavedGeneration: true,
+          hasUnsavedGeneration: isEditingSavedMaterial,
         });
-        if (!get().editingMaterial) {
+        if (!isEditingSavedMaterial) {
           persistResult(result, resultLanguage);
         }
       },
@@ -240,11 +268,24 @@ export const useTextStore = create<TextState>()(
         });
         removePersistedResult();
       },
+      clearAll: () => {
+        suppressPersistence = true;
+        set({
+          text: "",
+          result: null,
+          resultLanguage: null,
+          editingMaterial: null,
+          hasUnsavedGeneration: false,
+        });
+        suppressPersistence = false;
+        removePersistedDraft();
+        removePersistedResult();
+      },
       startNewText: () => {
         set({
           text: "",
           result: null,
-          targetLanguage: TARGET_LANGUAGE,
+          targetLanguage: getDefaultTargetLanguage(),
           resultLanguage: null,
           editingMaterial: null,
           hasUnsavedGeneration: false,
@@ -270,10 +311,9 @@ export const useTextStore = create<TextState>()(
       },
       clearEditingMaterial: () => set({
         editingMaterial: null,
-        targetLanguage: TARGET_LANGUAGE,
+        targetLanguage: getDefaultTargetLanguage(),
         resultLanguage: null,
       }),
-      dismissUnsavedGeneration: () => set({ hasUnsavedGeneration: false }),
       finishHydration: () => set({ hasHydrated: true }),
     }),
     {
@@ -324,6 +364,15 @@ export async function activateTextStoreForUser(userUuid: string) {
 
   flushPendingWrite();
   activeStorageOwner = owner;
+  const draftStorageKey = getScopedStorageKey(STORAGE_NAME);
+  let hasPersistedDraft = false;
+  try {
+    hasPersistedDraft = Boolean(
+      draftStorageKey && localStorage.getItem(draftStorageKey),
+    );
+  } catch {
+    // Continue with the preferred/default language when storage is unavailable.
+  }
 
   // The old unscoped key cannot safely be assigned to any Puter account.
   try {
@@ -347,8 +396,11 @@ export async function activateTextStoreForUser(userUuid: string) {
       useTextStore.setState({
         result: savedResult.result,
         resultLanguage: savedResult.resultLanguage,
-        hasUnsavedGeneration: true,
+        hasUnsavedGeneration: false,
       });
+    }
+    if (!hasPersistedDraft) {
+      useTextStore.setState({ targetLanguage: getDefaultTargetLanguage() });
     }
     useTextStore.getState().finishHydration();
     suppressPersistence = false;

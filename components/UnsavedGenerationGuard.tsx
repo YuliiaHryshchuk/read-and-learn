@@ -28,17 +28,20 @@ export function UnsavedGenerationGuard({ children }: { children: ReactNode }) {
   const hasUnsavedGeneration = useTextStore(
     (state) => state.hasUnsavedGeneration,
   );
-  const dismissUnsavedGeneration = useTextStore(
-    (state) => state.dismissUnsavedGeneration,
+  const editingMaterial = useTextStore(
+    (state) => state.editingMaterial,
+  );
+  const discardUnsavedGeneration = useTextStore(
+    (state) => state.startNewText,
   );
   const dialogRef = useRef<HTMLDialogElement>(null);
   const pendingActionRef = useRef<LeaveAction | null>(null);
   const skipNextPopStateRef = useRef(false);
-  const isEditorPage = pathname === "/new-text"
-    || pathname.startsWith("/new-text/")
-    || pathname === "/edit"
+  const isSavedMaterialEditor = pathname === "/edit"
     || pathname.startsWith("/edit/");
-  const shouldGuard = hasUnsavedGeneration && isEditorPage;
+  const shouldGuard = hasUnsavedGeneration
+    && Boolean(editingMaterial)
+    && isSavedMaterialEditor;
 
   const returnToPage = useCallback(() => {
     pendingActionRef.current = null;
@@ -58,10 +61,10 @@ export function UnsavedGenerationGuard({ children }: { children: ReactNode }) {
   const leaveWithoutSaving = useCallback(() => {
     const action = pendingActionRef.current;
     pendingActionRef.current = null;
-    dismissUnsavedGeneration();
+    discardUnsavedGeneration();
     dialogRef.current?.close();
     action?.();
-  }, [dismissUnsavedGeneration]);
+  }, [discardUnsavedGeneration]);
 
   useEffect(() => {
     if (!shouldGuard) return;

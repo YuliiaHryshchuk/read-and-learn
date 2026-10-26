@@ -1,0 +1,616 @@
+.launcher {
+  position: absolute;
+  z-index: 1;
+  top: 10px;
+  right: 24px;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 9px;
+  background: var(--color-surface);
+  box-shadow: 0 1px 4px rgb(23 40 69 / 10%);
+  cursor: pointer;
+  line-height: 0;
+}
+
+.launcher img {
+  display: block;
+  width: 22px;
+  height: 22px;
+}
+
+.launcher:hover:not(:disabled) {
+  background: var(--color-accent-soft);
+}
+
+.launcher:focus-visible {
+  outline: 3px solid var(--focus-accent);
+  outline-offset: 2px;
+}
+
+.launcher:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.dialog {
+  position: fixed;
+  inset: 0;
+  width: min(560px, calc(100vw - var(--space-6)));
+  height: min(680px, calc(100dvh - var(--space-6)));
+  max-width: none;
+  max-height: none;
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--color-border-warm);
+  border-radius: 14px;
+  background: var(--color-surface-warm);
+  box-shadow: var(--shadow-raised);
+  color: var(--color-text-strong);
+  overflow: hidden;
+}
+
+.dialog::backdrop {
+  background: rgb(23 40 69 / 42%);
+  backdrop-filter: blur(2px);
+}
+
+.dialogCard {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  padding: var(--space-5);
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dialogHeader {
+  display: flex;
+  flex: none;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.stepShell {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.stepIndicator {
+  margin-top: var(--space-4);
+}
+
+.stepContent {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.stepNavigation {
+  display: flex;
+  flex: none;
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  border-top: 1px solid var(--color-border-warm);
+}
+
+.stepNavigation button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.languageStep {
+  min-height: 260px;
+  margin-top: var(--space-5);
+  padding: var(--space-5);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: 11px;
+  background: var(--color-surface);
+}
+
+.resultStep {
+  display: flex;
+  min-height: 0;
+  margin-top: var(--space-5);
+  flex: 1;
+  flex-direction: column;
+}
+
+.recognitionStatus {
+  display: grid;
+  min-height: 260px;
+  margin-top: var(--space-5);
+  padding: var(--space-5);
+  place-content: center;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: 11px;
+  background: var(--color-surface);
+  text-align: center;
+}
+
+.recognitionDotsSlot {
+  display: inline-block;
+  width: 1.2em;
+  text-align: left;
+}
+
+.recognitionDotTwo {
+  animation: recognition-dot-two 2s step-end infinite;
+}
+
+.recognitionDotThree {
+  animation: recognition-dot-three 2s step-end infinite;
+}
+
+@keyframes recognition-dot-two {
+  0%,
+  32% {
+    visibility: hidden;
+  }
+
+  33%,
+  100% {
+    visibility: visible;
+  }
+}
+
+@keyframes recognition-dot-three {
+  0%,
+  65% {
+    visibility: hidden;
+  }
+
+  66%,
+  100% {
+    visibility: visible;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recognitionDotTwo,
+  .recognitionDotThree {
+    animation: none;
+  }
+}
+
+.resultTextarea {
+  width: 100%;
+  min-height: 0;
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  flex: 1;
+  resize: none;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 9px;
+  background: var(--color-surface);
+  color: var(--color-text-strong);
+  font: inherit;
+  line-height: 1.5;
+}
+
+.resultTextarea:focus {
+  border-color: var(--color-accent);
+  outline: 3px solid var(--focus-accent);
+}
+
+.resultWarning {
+  margin-top: var(--space-3);
+  flex: none;
+}
+
+.resultNavigation {
+  display: flex;
+  flex: none;
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  border-top: 1px solid var(--color-border-warm);
+}
+
+.resultNavigation button:not(:global(.button-primary)) {
+  border: 1px solid var(--color-accent-border);
+  background: var(--color-surface);
+  color: var(--color-accent-text);
+}
+
+.resultNavigation button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.languageLabel {
+  display: block;
+}
+
+.languageDropdown {
+  position: relative;
+  width: 100%;
+}
+
+.languageDropdownControl {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 44px 10px 12px;
+  align-items: center;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 9px;
+  background-color: var(--color-surface);
+  color: var(--color-text-strong);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.languageDropdownControl:hover,
+.languageDropdownControl[aria-expanded="true"] {
+  border-color: var(--color-accent-border);
+}
+
+.languageDropdownControl:focus-visible {
+  border-color: var(--color-accent);
+  outline: 3px solid var(--focus-accent);
+  outline-offset: 1px;
+}
+
+.languageDropdownValue {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.languageDropdown :global(.OcrLanguageDropdown-arrow-wrapper) {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: grid;
+  width: 42px;
+  height: 100%;
+  place-items: center;
+  pointer-events: none;
+}
+
+.languageDropdownArrow {
+  display: block;
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid var(--color-accent-text);
+  border-bottom: 2px solid var(--color-accent-text);
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 150ms ease;
+}
+
+.languageDropdownArrowOpen {
+  transform: translateY(2px) rotate(225deg);
+}
+
+.languageDropdownMenu {
+  position: absolute;
+  z-index: 2;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 100%;
+  max-height: 220px;
+  padding: var(--space-1);
+  margin: 0;
+  border: 1px solid var(--color-border-warm);
+  border-radius: 9px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-raised);
+  list-style: none;
+  overflow-y: auto;
+}
+
+.languageDropdownOption {
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 7px;
+  color: var(--color-text-strong);
+  cursor: pointer;
+}
+
+.languageDropdownOption:hover,
+.languageDropdownOption:global(.is-active) {
+  background: var(--color-accent-soft);
+}
+
+.languageDropdownOption:global(.is-selected) {
+  color: var(--color-accent-text);
+  font-weight: 600;
+}
+
+.closeButton {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 9px;
+  background: var(--color-accent-soft);
+  color: var(--color-accent-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--text-2xl);
+  line-height: 1;
+}
+
+.closeButton:hover,
+.closeButton:focus-visible {
+  background: var(--color-accent-soft-strong);
+}
+
+.closeButton:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.dropzone {
+  display: flex;
+  min-height: 260px;
+  margin-top: var(--space-5);
+  padding: var(--space-5);
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  border: 2px dashed var(--color-border-strong);
+  border-radius: 11px;
+  background: var(--color-surface);
+  text-align: center;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease;
+}
+
+.dropzoneActive {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.dropzoneIcon {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--color-accent-soft);
+}
+
+.secondaryButton {
+  border: 1px solid var(--color-accent-border);
+  background: var(--color-surface);
+  color: var(--color-accent-text);
+}
+
+.secondaryButton:hover {
+  background: var(--color-accent-soft);
+}
+
+.fileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.fileError {
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--color-accent-border);
+  border-radius: 8px;
+  background: var(--color-accent-soft);
+}
+
+.pickerActions {
+  display: flex;
+  margin-top: var(--space-5);
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.selectedImage {
+  margin-top: var(--space-5);
+}
+
+.selectedImage .fileError {
+  margin-top: 0;
+  margin-bottom: var(--space-3);
+}
+
+.cropEditor {
+  display: grid;
+}
+
+.cropViewport {
+  display: grid;
+  min-height: 160px;
+  max-height: 260px;
+  padding: var(--space-2);
+  place-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 11px;
+  background:
+    linear-gradient(45deg, rgb(23 40 69 / 4%) 25%, transparent 25%),
+    linear-gradient(-45deg, rgb(23 40 69 / 4%) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgb(23 40 69 / 4%) 75%),
+    linear-gradient(-45deg, transparent 75%, rgb(23 40 69 / 4%) 75%),
+    var(--color-surface-subtle);
+  background-position:
+    0 0,
+    0 8px,
+    8px -8px,
+    -8px 0;
+  background-size: 16px 16px;
+  overflow: auto;
+}
+
+.cropViewport :global(.ReactCrop) {
+  max-width: 100%;
+  max-height: 240px;
+  line-height: 0;
+}
+
+.cropViewport :global(.ReactCrop__crop-selection) {
+  border: 2px solid var(--color-surface);
+  box-shadow:
+    0 0 0 1px var(--color-accent),
+    0 0 0 9999em rgb(23 40 69 / 48%);
+}
+
+.cropViewport :global(.ReactCrop__drag-handle) {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-surface);
+  background: var(--color-accent);
+}
+
+.cropPreview {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 240px;
+}
+
+.selectedActions {
+  display: flex;
+  margin-top: var(--space-3);
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.rotateButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.rotateIcon {
+  font-size: var(--text-xl);
+  line-height: 1;
+}
+
+.fileDetails {
+  min-width: 0;
+  margin-top: var(--space-3);
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+.removeButton {
+  padding: var(--space-3);
+  border: 0;
+  background: transparent;
+  color: var(--color-accent-text);
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.removeButton:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 719.98px) {
+  .launcher {
+    top: 8px;
+    right: 20px;
+  }
+
+  .dialog {
+    inset: 0;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .dialogCard {
+    width: 100%;
+    height: 100%;
+    padding: max(var(--space-4), env(safe-area-inset-top))
+      max(var(--space-4), env(safe-area-inset-right))
+      max(var(--space-4), env(safe-area-inset-bottom))
+      max(var(--space-4), env(safe-area-inset-left));
+  }
+
+  .dropzone {
+    min-height: 240px;
+    padding: var(--space-4);
+  }
+
+  .pickerActions,
+  .selectedActions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .pickerActions button,
+  .selectedActions button,
+  .stepNavigation button,
+  .resultNavigation button {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .stepNavigation {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .resultNavigation {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .cropViewport {
+    max-height: min(260px, 36dvh);
+  }
+
+  .cropViewport :global(.ReactCrop),
+  .cropPreview {
+    max-height: min(240px, 33dvh);
+  }
+
+  .stepContent {
+    padding-right: 4px;
+    margin-right: -4px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
+
+@media (min-width: 720px) and (max-height: 700px) {
+  .stepContent {
+    padding-right: 4px;
+    margin-right: -4px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}

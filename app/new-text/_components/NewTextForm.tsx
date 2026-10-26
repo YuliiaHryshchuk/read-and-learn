@@ -31,6 +31,7 @@ export default function NewTextForm({ mode }: NewTextFormProps) {
   const text = useTextStore((state) => state.text);
   const setText = useTextStore((state) => state.setText);
   const result = useTextStore((state) => state.result);
+  const clearAll = useTextStore((state) => state.clearAll);
   const targetLanguage = useTextStore((state) => state.targetLanguage);
   const resultLanguage = useTextStore((state) => state.resultLanguage);
   const setTargetLanguage = useTextStore((state) => state.setTargetLanguage);
@@ -44,7 +45,12 @@ export default function NewTextForm({ mode }: NewTextFormProps) {
     () => result ? isAdaptationOutdated(text, result) : false,
     [result, text],
   );
-  const { generate, generationMessage, isPending } = useAdaptationGeneration({
+  const {
+    clearGenerationMessage,
+    generate,
+    generationMessage,
+    isPending,
+  } = useAdaptationGeneration({
     text,
     result,
     targetLanguage,
@@ -91,6 +97,15 @@ export default function NewTextForm({ mode }: NewTextFormProps) {
           isOverWordLimit={isOverWordLimit}
           disabled={!hasHydrated || controlsDisabled}
           onChange={setText}
+          clearAllDisabled={
+            !hasHydrated || controlsDisabled || (!text && !result)
+          }
+          onClearAll={mode === "create"
+            ? () => {
+                clearAll();
+                clearGenerationMessage();
+              }
+            : undefined}
         />
 
         <div className="d-flex align-items-center justify-content-between gap-5 mt-7 mobile-flex-column mobile-align-items-stretch mobile-gap-4">
