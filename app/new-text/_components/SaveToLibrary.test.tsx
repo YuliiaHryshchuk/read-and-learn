@@ -69,4 +69,15 @@ describe("SaveToLibrary", () => {
     expect(useTextStore.getState().text).toBe("");
     expect(useTextStore.getState().result).toBeNull();
   });
+
+  it("disables browser autofill for the material title", async () => {
+    const user = userEvent.setup();
+    render(<SaveToLibrary />);
+
+    await user.click(screen.getByRole("button", { name: "Save to my library" }));
+
+    const titleInput = screen.getByRole("textbox", { name: "Text title" });
+    expect(titleInput.getAttribute("autocomplete")).toBe("off");
+    expect(titleInput.closest("form")?.getAttribute("autocomplete")).toBe("off");
+  });
 });

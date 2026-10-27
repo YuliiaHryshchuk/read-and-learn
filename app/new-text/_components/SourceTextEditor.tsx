@@ -88,7 +88,7 @@ export default function SourceTextEditor({
         ref={textareaRef}
         id="source-text"
         name="sourceText"
-        className={`${styles.textarea} d-block width-100 p-4 text-xl line-body`}
+        className={`${styles.textarea} d-block width-100 text-xl line-body`}
         aria-describedby="text-limits"
         maxLength={maxCharacters}
         value={text}

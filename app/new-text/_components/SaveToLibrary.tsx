@@ -126,6 +126,7 @@ export default function SaveToLibrary() {
 
           <form
             className="d-flex align-items-stretch gap-3 mobile-flex-column"
+            autoComplete="off"
             onSubmit={submit}
           >
             <label className="visually-hidden" htmlFor="material-title">
@@ -134,8 +135,9 @@ export default function SaveToLibrary() {
             <input
               id="material-title"
               className="form-control flex-1 min-width-0"
-              name="title"
+              name="materialTitle"
               type="text"
+              autoComplete="off"
               placeholder="My text"
               value={title}
               maxLength={120}
