@@ -50,20 +50,29 @@ export default function SourceTextEditor({
     <TextContainer
       className={styles.editorCard}
       icon={<Image src="/icons/document.svg" width={22} height={22} alt="" />}
+      hideIconOnMobile
       title={
-        <label htmlFor="source-text">
-          {mode === "edit" && materialTitle
-            ? `Edit “${materialTitle}”`
-            : mode === "edit"
-              ? "Edit text"
-              : "Type your text"}
-        </label>
+        <span className={styles.editorHeading}>
+          <label className={styles.editorHeadingLabel} htmlFor="source-text">
+            {mode === "edit" && materialTitle
+              ? `Edit “${materialTitle}”`
+              : mode === "edit"
+                ? "Edit text"
+                : "Type your text"}
+          </label>
+          <span className={styles.editorHeadingSeparator}>or</span>
+          <ImageOcrLauncher
+            disabled={disabled}
+            text={text}
+            onTextChange={onChange}
+          />
+        </span>
       }
       contentClassName={`${styles.inputContainer} min-height-0 p-0 overflow-hidden`}
       actions={[
         <span
           id="text-limits"
-          className={`${isOverWordLimit ? "text-danger" : "text-muted"} text-md mobile-text-xs`}
+          className={`${styles.editorHeaderItem} ${isOverWordLimit ? "text-danger" : "text-muted"} text-md`}
           key="limits"
           role="status"
         >
@@ -73,7 +82,7 @@ export default function SourceTextEditor({
           ? [
               <button
                 type="button"
-                className={styles.clearAllButton}
+                className={`${styles.clearAllButton} ${styles.editorHeaderItem}`}
                 disabled={clearAllDisabled}
                 key="clear-all"
                 onClick={onClearAll}
@@ -94,11 +103,6 @@ export default function SourceTextEditor({
         value={text}
         disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
-      />
-      <ImageOcrLauncher
-        disabled={disabled}
-        text={text}
-        onTextChange={onChange}
       />
     </TextContainer>
   );

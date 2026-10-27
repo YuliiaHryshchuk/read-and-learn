@@ -55,6 +55,25 @@
   transform: rotate(90deg);
 }
 
+.editorHeading {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  column-gap: var(--space-2);
+}
+
+.editorHeadingSeparator {
+  font-size: var(--text-md);
+  font-weight: 400;
+}
+
+.editorHeaderItem {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  line-height: 1.2;
+}
+
 .inputContainer {
   position: relative;
   display: flex;
@@ -81,7 +100,6 @@
   color: var(--color-text);
   font: inherit;
   padding: var(--space-4);
-  padding-right: calc(var(--space-8) + var(--space-7));
 }
 
 .formMessage {
@@ -394,6 +412,11 @@
 }
 
 @media (max-width: 719.98px) {
+  .editorHeadingLabel,
+  .editorHeadingSeparator {
+    display: none;
+  }
+
   .editMain {
     padding-top: var(--space-2);
   }

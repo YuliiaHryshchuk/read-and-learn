@@ -3,6 +3,7 @@
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useCallback, useState } from "react";
+import { createPortal } from "react-dom";
 import styles from "./imageOcr.module.scss";
 
 const ImageOcrDialog = dynamic(() => import("./ImageOcrDialog"), {
@@ -28,22 +29,22 @@ export default function ImageOcrLauncher({
       <button
         type="button"
         className={styles.launcher}
-        aria-label="Extract text from image"
         aria-haspopup="dialog"
         aria-expanded={isOpen}
-        title="Extract text from image"
         disabled={disabled}
         onClick={() => setIsOpen(true)}
       >
         <Image src="/icons/scan-text.svg" width={22} height={22} alt="" />
+        <span>Extract from image</span>
       </button>
 
-      {isOpen && (
+      {isOpen && createPortal(
         <ImageOcrDialog
           text={text}
           onClose={closeDialog}
           onTextChange={onTextChange}
-        />
+        />,
+        document.body,
       )}
     </>
   );
