@@ -32,6 +32,8 @@ const MAX_EXPLANATION_LENGTH = 20_000;
 const MIN_FRAGMENT_WORDS = 5;
 const MAX_FRAGMENT_WORDS = 50;
 const SENTENCE_END = /[.!?](?:["'»”’\)\}\]]+)?$/u;
+const STRUCTURED_OUTPUT_LEAK_SUFFIX =
+  /\\?["'][\}\]]{3,}(?:\\?["'][\}\]]*)?$/u;
 
 export class InvalidAdaptationError extends Error {
   constructor() {
@@ -148,6 +150,11 @@ function isBoundedString(value: unknown, maxLength: number, allowEmpty = false):
     && (allowEmpty || value.trim().length > 0);
 }
 
+function isValidExplanation(value: unknown): value is string {
+  return isBoundedString(value, MAX_EXPLANATION_LENGTH, true)
+    && !STRUCTURED_OUTPUT_LEAK_SUFFIX.test(value.trim());
+}
+
 export function parseExplanationItems(explanation: string): ExplanationItem[] {
   const segments = explanation
     .trim()
@@ -213,7 +220,7 @@ export function parseModelAdaptation(
       if (!isBoundedString(modelFragment.translation, MAX_TRANSLATION_LENGTH)) {
         throw new InvalidAdaptationError();
       }
-      if (!isBoundedString(modelFragment.explanation, MAX_EXPLANATION_LENGTH, true)) {
+      if (!isValidExplanation(modelFragment.explanation)) {
         throw new InvalidAdaptationError();
       }
 
@@ -252,7 +259,7 @@ export function isAdaptationResult(value: unknown): value is AdaptationResult {
     sourceCursor = fragmentStart + fragment.text.length;
 
     if (!isBoundedString(fragment.translation, MAX_TRANSLATION_LENGTH)) return false;
-    if (!isBoundedString(fragment.explanation, MAX_EXPLANATION_LENGTH, true)) return false;
+    if (!isValidExplanation(fragment.explanation)) return false;
   }
 
   return !/\S/u.test(result.sourceText.slice(sourceCursor));

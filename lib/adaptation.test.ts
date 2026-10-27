@@ -70,6 +70,16 @@ describe("adaptation schema and parsing", () => {
       "fragment-1": { translation: "", explanation: "" },
       "fragment-2": { translation: "Bye", explanation: "", extra: true },
     })],
+    [JSON.stringify({
+      "fragment-1": {
+        translation: "Hello",
+        explanation: "hola — hello",
+      },
+      "fragment-2": {
+        translation: "Bye",
+        explanation: 'extraño — I miss it."}}}]}',
+      },
+    })],
   ])("rejects invalid model response %j", (content) => {
     expect(() => parseModelAdaptation(content, "Hola. Adiós.", fragments))
       .toThrow(InvalidAdaptationError);
@@ -110,5 +120,11 @@ describe("stored adaptations", () => {
       ...makeAdaptation(),
       extra: true,
     })).toBeNull();
+    expect(isAdaptationResult({
+      ...makeAdaptation(),
+      fragments: makeAdaptation().fragments.map((fragment, index) => index === 0
+        ? { ...fragment, explanation: 'term — meaning."}}}]}' }
+        : fragment),
+    })).toBe(false);
   });
 });
