@@ -12,10 +12,10 @@ describe("buildAdaptationMessages", () => {
     expect(JSON.parse(messages[1].content)).toEqual({ language: "Klingon", fragments });
   });
 
-  it("adds a language-specific example case-insensitively", () => {
+  it("keeps language-specific examples disabled", () => {
     const [russian] = buildAdaptationMessages(fragments, " russian ");
-    const [unknown] = buildAdaptationMessages(fragments, "Klingon");
-    expect(russian.content).toContain("EXAMPLE FOR THE CURRENT TARGET LANGUAGE");
-    expect(unknown.content).not.toContain("EXAMPLE FOR THE CURRENT TARGET LANGUAGE");
+    const [english] = buildAdaptationMessages(fragments, "English");
+    expect(russian.content).not.toContain("EXAMPLE FOR THE CURRENT TARGET LANGUAGE");
+    expect(english.content).not.toContain("EXAMPLE FOR THE CURRENT TARGET LANGUAGE");
   });
 });
