@@ -24,7 +24,12 @@ export default function RecognitionResultStep({
       <textarea
         id="ocr-result-text"
         className={styles.resultTextarea}
+        autoCapitalize="none"
+        autoComplete="off"
+        autoCorrect="off"
+        spellCheck={false}
         value={value}
+        {...{ writingsuggestions: "false" }}
         onChange={(event) => onChange(event.target.value)}
       />
       {!containsRecognizableText(value) && (
