@@ -1,5 +1,6 @@
 import type { OcrResult } from "@paddleocr/paddleocr-js";
 import type { OcrLanguage } from "./ocrLanguages";
+import { sortOcrItemsByReadingOrder } from "./ocrReadingOrder";
 import { createWorkerOrtOptions } from "./paddleOcrCompatibility";
 
 const DETECTION_MODEL_URL =
@@ -60,8 +61,11 @@ export async function createOcrSession(
 }
 
 export function resultToText(result: OcrResult) {
-  return result.items
-    .filter((item) => item.text.trim().length > 0)
+  const recognizedItems = result.items
+    .filter((item) => item.text.trim().length > 0);
+  const itemsInReadingOrder = sortOcrItemsByReadingOrder(recognizedItems);
+
+  return itemsInReadingOrder
     .map((item) => item.text.trim())
     .join("\n");
 }
