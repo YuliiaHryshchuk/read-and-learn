@@ -1,3 +1,5 @@
+@use "../styles/mixins";
+
 .fragment {
   display: grid;
   grid-template-columns: var(--space-6) minmax(0, 1fr);
@@ -119,7 +121,7 @@
   max-height: max(calc(3 * 1.5em + 24px), calc(100dvh - 350px));
 }
 
-@media (max-width: 719.98px) {
+@include mixins.below(layout) {
   .fragment {
     grid-template-columns: minmax(0, 1fr);
     padding: var(--space-2);
@@ -131,7 +133,7 @@
 
   .fragmentToggle {
     display: block;
-    min-height: 44px;
+    min-height: var(--control-min-size);
     padding-block: var(--space-2);
   }
 

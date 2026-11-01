@@ -84,9 +84,11 @@ $spacing: (
 );
 
 // Desktop styles are the default. These values are max-width breakpoints.
+$layout-breakpoint: 45rem;
 $breakpoints: (
   sm: 37.5rem,
-  md: 40.625rem,
+  md: 40rem,
+  layout: $layout-breakpoint,
   lg: 64rem,
 );
 

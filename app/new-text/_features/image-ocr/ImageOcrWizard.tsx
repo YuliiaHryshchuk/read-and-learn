@@ -16,6 +16,7 @@ const STEP_NUMBER = {
   error: 3,
   review: 3,
 };
+const TOTAL_STEPS = 3;
 
 type ImageOcrWizardProps = {
   text: string;
@@ -38,7 +39,7 @@ export default function ImageOcrWizard({
     return (
       <ImageOcrStep
         currentStep={STEP_NUMBER.language}
-        totalSteps={3}
+        totalSteps={TOTAL_STEPS}
         primaryLabel="Continue"
         primaryDisabled={!state.selectedLanguage}
         onPrimary={flow.continueToImage}
@@ -55,7 +56,7 @@ export default function ImageOcrWizard({
     return (
       <ImageOcrStep
         currentStep={STEP_NUMBER.image}
-        totalSteps={3}
+        totalSteps={TOTAL_STEPS}
         primaryLabel="Recognize text"
         primaryDisabled={!state.selectedImage}
         onBack={flow.backToLanguage}
@@ -71,7 +72,10 @@ export default function ImageOcrWizard({
 
   if (state.status === "recognizing") {
     return (
-      <ImageOcrStep currentStep={STEP_NUMBER.recognizing} totalSteps={3}>
+      <ImageOcrStep
+        currentStep={STEP_NUMBER.recognizing}
+        totalSteps={TOTAL_STEPS}
+      >
         <RecognizingStep />
       </ImageOcrStep>
     );
@@ -81,7 +85,7 @@ export default function ImageOcrWizard({
     return (
       <ImageOcrStep
         currentStep={STEP_NUMBER.error}
-        totalSteps={3}
+        totalSteps={TOTAL_STEPS}
         primaryLabel="Back to image"
         onPrimary={flow.backToImage}
       >
@@ -93,7 +97,7 @@ export default function ImageOcrWizard({
   return (
     <ImageOcrStep
       currentStep={STEP_NUMBER.review}
-      totalSteps={3}
+      totalSteps={TOTAL_STEPS}
       footer={
         <footer className={styles.resultNavigation}>
           <button

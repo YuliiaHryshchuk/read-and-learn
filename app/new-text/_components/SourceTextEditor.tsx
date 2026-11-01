@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef } from "react";
 import TextContainer from "@/components/TextContainer";
+import { MOBILE_LAYOUT_MEDIA_QUERY } from "@/lib/layout";
 import ImageOcrLauncher from "../_features/image-ocr/ImageOcrLauncher";
 import type { NewTextMode } from "../_hooks/useMaterialEditor";
 import styles from "../page.module.scss";
@@ -41,7 +42,7 @@ export default function SourceTextEditor({
     if (disabled || hasAppliedInitialFocus.current) return;
 
     hasAppliedInitialFocus.current = true;
-    if (!window.matchMedia("(max-width: 719.98px)").matches) return;
+    if (!window.matchMedia(MOBILE_LAYOUT_MEDIA_QUERY).matches) return;
 
     textareaRef.current?.focus({ preventScroll: true });
   }, [disabled]);

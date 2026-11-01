@@ -4,6 +4,7 @@ import TextContainer from "@/components/TextContainer";
 import ProcessedExample from "@/components/ProcessedExample";
 import PuterAuth from "@/components/PuterAuth";
 import type { StructuredAdaptationResult } from "@/lib/adaptation";
+import { MAX_MATERIAL_WORDS } from "@/lib/materialLimits";
 import styles from "./page.module.scss";
 
 const original = `Cuando Lucía llegó a Montevideo, todavía no conocía bien la ciudad. Cada mañana salía a caminar por su barrio, escuchaba conversaciones en español y anotaba las palabras nuevas. Poco a poco empezó a reconocer expresiones, tiempos verbales y maneras distintas de decir lo mismo.
@@ -61,7 +62,7 @@ export default function Home() {
               className="text-muted text-md white-space-nowrap mobile-text-xs"
               key="word-limit"
             >
-              Up to 300 words
+              Up to {MAX_MATERIAL_WORDS} words
             </span>,
           ]}
         >

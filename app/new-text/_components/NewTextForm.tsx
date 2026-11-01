@@ -6,17 +6,17 @@ import Link from "next/link";
 import LoadingState from "@/components/LoadingState";
 import ProcessedExample from "@/components/ProcessedExample";
 import { isAdaptationOutdated } from "@/lib/incrementalAdaptation";
+import {
+  MAX_MATERIAL_SOURCE_LENGTH,
+  MAX_MATERIAL_WORDS,
+} from "@/lib/materialLimits";
 import { countWords } from "@/lib/text";
 import { useTextStore } from "@/stores/useTextStore";
 import GenerationControls from "./GenerationControls";
 import LanguageSelector from "./LanguageSelector";
 import SaveToLibrary from "./SaveToLibrary";
 import SourceTextEditor from "./SourceTextEditor";
-import {
-  MAX_TEXT_CHARACTERS,
-  MAX_TEXT_WORDS,
-  useAdaptationGeneration,
-} from "../_hooks/useAdaptationGeneration";
+import { useAdaptationGeneration } from "../_hooks/useAdaptationGeneration";
 import {
   useMaterialEditor,
   type NewTextMode,
@@ -39,7 +39,7 @@ export default function NewTextForm({ mode }: NewTextFormProps) {
   const hasHydrated = useTextStore((state) => state.hasHydrated);
   const { isLoadingSavedMaterial, materialMessage } = useMaterialEditor(mode);
   const wordCount = countWords(text);
-  const isOverWordLimit = wordCount > MAX_TEXT_WORDS;
+  const isOverWordLimit = wordCount > MAX_MATERIAL_WORDS;
   const effectiveTargetLanguage = targetLanguage.trim();
   const isExplanationOutdated = useMemo(
     () => result ? isAdaptationOutdated(text, result) : false,
@@ -92,8 +92,8 @@ export default function NewTextForm({ mode }: NewTextFormProps) {
           materialTitle={editingMaterial?.title}
           text={text}
           wordCount={wordCount}
-          maxWords={MAX_TEXT_WORDS}
-          maxCharacters={MAX_TEXT_CHARACTERS}
+          maxWords={MAX_MATERIAL_WORDS}
+          maxCharacters={MAX_MATERIAL_SOURCE_LENGTH}
           isOverWordLimit={isOverWordLimit}
           disabled={!hasHydrated || controlsDisabled}
           onChange={setText}

@@ -1,0 +1,6 @@
+export const MAX_MATERIAL_TITLE_LENGTH = 120;
+export const MAX_MATERIAL_SOURCE_LENGTH = 3_000;
+export const MAX_MATERIAL_WORDS = 300;
+export const MATERIAL_PAGE_SIZE = 10;
+export const MAX_MATERIAL_ID_LENGTH = 100;
+export const MAX_MATERIAL_LIST_OFFSET = 100_000;

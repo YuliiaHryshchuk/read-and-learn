@@ -50,6 +50,7 @@ const STORAGE_NAME = "study-reader-new-text";
 const RESULT_STORAGE_SUFFIX = "result";
 const RESULT_SCHEMA_VERSION = 1;
 const PERSIST_DEBOUNCE_MS = 400;
+const TEXT_STORE_PERSIST_VERSION = 9;
 const initialTextState = {
   text: "",
   result: null,
@@ -318,7 +319,7 @@ export const useTextStore = create<TextState>()(
     }),
     {
       name: STORAGE_NAME,
-      version: 9,
+      version: TEXT_STORE_PERSIST_VERSION,
       storage: createJSONStorage(() => scopedDebouncedStorage),
       // Restore after mount so the server and first browser render match.
       skipHydration: true,

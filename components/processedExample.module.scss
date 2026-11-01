@@ -1,6 +1,8 @@
+@use "../styles/mixins";
+
 .bulkToggleIcon {
   flex: none;
-  transition: transform 150ms ease;
+  transition: transform var(--duration-fast) ease;
 }
 
 .bulkToggleIconOpen {
@@ -11,7 +13,7 @@
   display: none;
 }
 
-@media (max-width: 719.98px) {
+@include mixins.below(layout) {
   .desktopDescription {
     display: none;
   }

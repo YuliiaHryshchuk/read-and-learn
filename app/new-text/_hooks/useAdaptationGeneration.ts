@@ -19,10 +19,11 @@ import {
   mergeIncrementalAdaptation,
   planIncrementalAdaptation,
 } from "@/lib/incrementalAdaptation";
+import {
+  MAX_MATERIAL_SOURCE_LENGTH,
+  MAX_MATERIAL_WORDS,
+} from "@/lib/materialLimits";
 import { useTextStore } from "@/stores/useTextStore";
-
-export const MAX_TEXT_WORDS = 300;
-export const MAX_TEXT_CHARACTERS = 3_000;
 
 type GenerationOptions = {
   text: string;
@@ -102,8 +103,8 @@ export function useAdaptationGeneration({
       setGenerationMessage("Enter some text first.");
       return;
     }
-    if (text.length > MAX_TEXT_CHARACTERS || isOverWordLimit) {
-      setGenerationMessage(`Use up to ${MAX_TEXT_WORDS} words.`);
+    if (text.length > MAX_MATERIAL_SOURCE_LENGTH || isOverWordLimit) {
+      setGenerationMessage(`Use up to ${MAX_MATERIAL_WORDS} words.`);
       return;
     }
     if (!effectiveTargetLanguage) {
