@@ -134,7 +134,7 @@
 }
 
 // Desktop-first overrides for viewports up to 600px.
-@include mixins.down(sm) {
+@include mixins.below(sm) {
   @each $step, $value in tokens.$spacing {
     .mobile-m-#{$step} { margin: var(--space-#{$step}) !important; }
     .mobile-mt-#{$step} { margin-top: var(--space-#{$step}) !important; }

@@ -3,6 +3,11 @@ import {
   type StructuredAdaptationResult,
 } from "../../lib/adaptation";
 import { MAX_TARGET_LANGUAGE_LENGTH } from "../../lib/languages";
+import {
+  MAX_MATERIAL_SOURCE_LENGTH,
+  MAX_MATERIAL_TITLE_LENGTH,
+  MAX_MATERIAL_WORDS,
+} from "../../lib/materialLimits";
 import { countWords } from "../../lib/text";
 
 export type MaterialBody = {
@@ -14,8 +19,6 @@ export type MaterialBody = {
 };
 
 export const MAX_MATERIAL_REQUEST_BYTES = 250_000;
-const MAX_TITLE_LENGTH = 120;
-const MAX_SOURCE_LENGTH = 3_000;
 const MAX_SOURCE_LANGUAGE_LENGTH = 100;
 
 function isBoundedText(value: unknown, maxLength: number): value is string {
@@ -40,8 +43,8 @@ export function parseMaterialBody(value: unknown): MaterialBody | null {
   ) {
     return null;
   }
-  if (!isBoundedText(body.title, MAX_TITLE_LENGTH)) return null;
-  if (!isBoundedText(body.sourceText, MAX_SOURCE_LENGTH)) return null;
+  if (!isBoundedText(body.title, MAX_MATERIAL_TITLE_LENGTH)) return null;
+  if (!isBoundedText(body.sourceText, MAX_MATERIAL_SOURCE_LENGTH)) return null;
   if (!isBoundedText(body.sourceLanguage, MAX_SOURCE_LANGUAGE_LENGTH)) {
     return null;
   }
@@ -50,7 +53,7 @@ export function parseMaterialBody(value: unknown): MaterialBody | null {
   }
   if (!isAdaptationResult(body.adaptation)) return null;
   if (body.adaptation.sourceText !== body.sourceText) return null;
-  if (countWords(body.sourceText) > 300) return null;
+  if (countWords(body.sourceText) > MAX_MATERIAL_WORDS) return null;
 
   return {
     title: body.title.trim(),

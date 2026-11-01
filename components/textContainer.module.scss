@@ -1,3 +1,5 @@
+@use "../styles/mixins";
+
 .container {
   border: 1px solid var(--color-border);
   border-radius: 11px;
@@ -99,7 +101,7 @@
   border-radius: 0;
 }
 
-@media (max-width: 719.98px) {
+@include mixins.below(layout) {
   .hideIconOnMobile .icon {
     display: none;
   }
@@ -149,7 +151,7 @@
   }
 }
 
-@media (max-width: 37.5rem) {
+@include mixins.below(sm) {
   .header {
     flex-wrap: wrap;
     gap: var(--space-2);

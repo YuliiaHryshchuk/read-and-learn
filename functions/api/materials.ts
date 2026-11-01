@@ -6,6 +6,10 @@ import {
   MATERIAL_PREVIEW_LENGTH,
 } from "../../lib/materials";
 import {
+  MATERIAL_PAGE_SIZE,
+  MAX_MATERIAL_LIST_OFFSET,
+} from "../../lib/materialLimits";
+import {
   PuterAuthenticationError,
   requirePuterUser,
 } from "../../lib/server/puterAuth";
@@ -37,8 +41,6 @@ type MaterialListItem = {
 type MaterialListRow = MaterialListItem & {
   isTruncated: number;
 };
-
-const PAGE_SIZE = 10;
 
 export async function onRequestPost({ request, env }: FunctionContext) {
   try {
@@ -122,7 +124,7 @@ export async function onRequestGet({ request, env }: FunctionContext) {
     }
 
     const offset = Number(offsetValue);
-    if (!Number.isSafeInteger(offset) || offset > 100_000) {
+    if (!Number.isSafeInteger(offset) || offset > MAX_MATERIAL_LIST_OFFSET) {
       return invalidRequest("The library offset is invalid.");
     }
 
@@ -143,12 +145,12 @@ export async function onRequestGet({ request, env }: FunctionContext) {
         MATERIAL_PREVIEW_LENGTH,
         MATERIAL_PREVIEW_LENGTH,
         user.uuid,
-        PAGE_SIZE + 1,
+        MATERIAL_PAGE_SIZE + 1,
         offset,
       )
       .all<MaterialListRow>();
 
-    const materials = results.slice(0, PAGE_SIZE).map((material) => ({
+    const materials = results.slice(0, MATERIAL_PAGE_SIZE).map((material) => ({
       id: material.id,
       title: material.title,
       preview: formatMaterialPreview(
@@ -159,7 +161,7 @@ export async function onRequestGet({ request, env }: FunctionContext) {
 
     return jsonResponse({
       materials,
-      hasMore: results.length > PAGE_SIZE,
+      hasMore: results.length > MATERIAL_PAGE_SIZE,
     });
   } catch (error) {
     if (error instanceof PuterAuthenticationError) {

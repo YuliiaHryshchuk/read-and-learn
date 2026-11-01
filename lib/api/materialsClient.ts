@@ -4,6 +4,7 @@ import {
 } from "@/lib/adaptation";
 import { requestApi } from "@/lib/api/client";
 import { MAX_TARGET_LANGUAGE_LENGTH } from "@/lib/languages";
+import { MATERIAL_PAGE_SIZE } from "@/lib/materialLimits";
 import { MATERIAL_PREVIEW_MAX_LENGTH } from "@/lib/materials";
 
 export type MaterialListItem = {
@@ -36,8 +37,6 @@ export type SaveMaterialInput = {
   adaptation: StructuredAdaptationResult;
 };
 
-const PAGE_SIZE = 10;
-
 function authorizationHeaders(authToken: string, includeJson = false) {
   return {
     Authorization: `Bearer ${authToken}`,
@@ -62,7 +61,10 @@ export async function listMaterials(authToken: string, offset: number) {
   }
 
   const materials = payload.materials.filter(isMaterialListItem);
-  if (materials.length !== payload.materials.length || materials.length > PAGE_SIZE) {
+  if (
+    materials.length !== payload.materials.length
+    || materials.length > MATERIAL_PAGE_SIZE
+  ) {
     throw new Error("The library returned an invalid response.");
   }
 

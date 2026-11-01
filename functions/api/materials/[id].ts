@@ -2,6 +2,7 @@ import {
   decodeStoredAdaptation,
   serializeStoredAdaptation,
 } from "../../../lib/adaptation";
+import { MAX_MATERIAL_ID_LENGTH } from "../../../lib/materialLimits";
 import {
   PuterAuthenticationError,
   requirePuterUser,
@@ -44,7 +45,7 @@ export async function onRequestGet({
   try {
     const user = await requirePuterUser(request);
     const id = params.id;
-    if (!id || id.length > 100) {
+    if (!id || id.length > MAX_MATERIAL_ID_LENGTH) {
       return errorResponse("not_found", "The material was not found.", 404);
     }
 
@@ -118,7 +119,7 @@ export async function onRequestDelete({
   try {
     const user = await requirePuterUser(request);
     const id = params.id;
-    if (!id || id.length > 100) {
+    if (!id || id.length > MAX_MATERIAL_ID_LENGTH) {
       return errorResponse("not_found", "The material was not found.", 404);
     }
 
@@ -166,7 +167,7 @@ export async function onRequestPut({
 
     const user = await requirePuterUser(request);
     const id = params.id;
-    if (!id || id.length > 100) {
+    if (!id || id.length > MAX_MATERIAL_ID_LENGTH) {
       return errorResponse("not_found", "The material was not found.", 404);
     }
 

@@ -1,12 +1,12 @@
 @use "sass:map";
 @use "tokens";
 
-@mixin down($breakpoint) {
+@mixin below($breakpoint) {
   @if not map.has-key(tokens.$breakpoints, $breakpoint) {
     @error "Unknown breakpoint: #{$breakpoint}";
   }
 
-  @media (max-width: map.get(tokens.$breakpoints, $breakpoint)) {
+  @media (width < map.get(tokens.$breakpoints, $breakpoint)) {
     @content;
   }
 }
@@ -15,7 +15,7 @@
   width: min(100% - var(--space-6), #{tokens.$content-max-width});
   margin-inline: auto;
 
-  @include down(sm) {
+  @include below(sm) {
     width: min(100% - var(--space-4), #{tokens.$content-max-width});
   }
 }

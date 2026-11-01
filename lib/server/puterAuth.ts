@@ -1,5 +1,6 @@
 const PUTER_WHOAMI_URL = "https://api.puter.com/whoami";
 const MAX_AUTHORIZATION_HEADER_LENGTH = 16_384;
+const MAX_PUTER_UUID_LENGTH = 200;
 
 export type AuthenticatedPuterUser = {
   uuid: string;
@@ -94,7 +95,11 @@ export async function requirePuterUser(
   const uuid = user && typeof user === "object"
     ? (user as Record<string, unknown>).uuid
     : undefined;
-  if (typeof uuid !== "string" || !uuid.trim() || uuid.length > 200) {
+  if (
+    typeof uuid !== "string"
+    || !uuid.trim()
+    || uuid.length > MAX_PUTER_UUID_LENGTH
+  ) {
     throw new PuterAuthenticationError(
       502,
       "authentication_unavailable",

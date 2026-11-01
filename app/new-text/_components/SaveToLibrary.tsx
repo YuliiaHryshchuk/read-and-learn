@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { usePuterAuth } from "@/components/PuterAuthProvider";
 import { saveMaterial } from "@/lib/api/materialsClient";
 import { SOURCE_LANGUAGE } from "@/lib/languages";
+import { MAX_MATERIAL_TITLE_LENGTH } from "@/lib/materialLimits";
 import { useTextStore } from "@/stores/useTextStore";
 
 export default function SaveToLibrary() {
@@ -140,7 +141,7 @@ export default function SaveToLibrary() {
               autoComplete="off"
               placeholder="My text"
               value={title}
-              maxLength={120}
+              maxLength={MAX_MATERIAL_TITLE_LENGTH}
               required
               autoFocus
               disabled={isSaving}

@@ -26,6 +26,8 @@
   }
 
   --content-max-width: #{tokens.$content-max-width};
+  --control-min-size: 2.75rem;
+  --duration-fast: 150ms;
   --shadow-card: 0 5px 18px rgb(27 41 64 / 4%);
   --shadow-raised: 0 8px 24px rgb(73 47 36 / 7%);
   --shadow-control: 0 1px 3px rgb(23 40 69 / 28%);

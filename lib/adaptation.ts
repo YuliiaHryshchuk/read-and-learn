@@ -31,6 +31,7 @@ const MAX_TRANSLATION_LENGTH = 4_000;
 const MAX_EXPLANATION_LENGTH = 20_000;
 const MIN_FRAGMENT_WORDS = 5;
 const MAX_FRAGMENT_WORDS = 50;
+const EXPLANATION_SEPARATOR = " — ";
 const SENTENCE_END = /[.!?](?:["'»”’\)\}\]]+)?$/u;
 const STRUCTURED_OUTPUT_LEAK_SUFFIX =
   /\\?["'][\}\]]{3,}(?:\\?["'][\}\]]*)?$/u;
@@ -164,7 +165,7 @@ export function parseExplanationItems(explanation: string): ExplanationItem[] {
 
   const items: ExplanationItem[] = [];
   for (const segment of segments) {
-    const separator = segment.indexOf(" — ");
+    const separator = segment.indexOf(EXPLANATION_SEPARATOR);
     if (separator < 1) {
       const previous = items.at(-1);
       if (previous) previous.meaning = `${previous.meaning} ${segment}`;
@@ -174,7 +175,7 @@ export function parseExplanationItems(explanation: string): ExplanationItem[] {
 
     items.push({
       term: segment.slice(0, separator).trim(),
-      meaning: segment.slice(separator + 3).trim(),
+      meaning: segment.slice(separator + EXPLANATION_SEPARATOR.length).trim(),
     });
   }
 
