@@ -426,6 +426,11 @@ describe("ImageOcrLauncher", () => {
 
     const result = await within(dialog).findByLabelText("Recognized text");
     expect((result as HTMLTextAreaElement).value).toBe("Hola mundo");
+    expect(result.getAttribute("autocapitalize")).toBe("none");
+    expect(result.getAttribute("autocomplete")).toBe("off");
+    expect(result.getAttribute("autocorrect")).toBe("off");
+    expect(result.getAttribute("spellcheck")).toBe("false");
+    expect(result.getAttribute("writingsuggestions")).toBe("false");
     await waitFor(() => expect(ocrMocks.dispose).toHaveBeenCalledTimes(1));
     await user.click(within(dialog).getByRole("button", { name: "Use text" }));
 

@@ -99,9 +99,14 @@ export default function SourceTextEditor({
         name="sourceText"
         className={`${styles.textarea} d-block width-100 text-xl line-body`}
         aria-describedby="text-limits"
+        autoCapitalize="none"
+        autoComplete="off"
+        autoCorrect="off"
         maxLength={maxCharacters}
+        spellCheck={false}
         value={text}
         disabled={disabled}
+        {...{ writingsuggestions: "false" }}
         onChange={(event) => onChange(event.target.value)}
       />
     </TextContainer>

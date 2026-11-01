@@ -192,6 +192,29 @@ describe("LanguageSelector", () => {
 });
 
 describe("SourceTextEditor", () => {
+  it("disables browser spelling and writing assistance", () => {
+    vi.stubGlobal("matchMedia", vi.fn().mockReturnValue({ matches: false }));
+    render(
+      <SourceTextEditor
+        mode="create"
+        text="Erase una vez"
+        wordCount={3}
+        maxWords={300}
+        maxCharacters={3_000}
+        isOverWordLimit={false}
+        disabled={false}
+        onChange={vi.fn()}
+      />,
+    );
+
+    const textarea = screen.getByRole("textbox", { name: "Type your text" });
+    expect(textarea.getAttribute("autocapitalize")).toBe("none");
+    expect(textarea.getAttribute("autocomplete")).toBe("off");
+    expect(textarea.getAttribute("autocorrect")).toBe("off");
+    expect(textarea.getAttribute("spellcheck")).toBe("false");
+    expect(textarea.getAttribute("writingsuggestions")).toBe("false");
+  });
+
   it("focuses the text area once it becomes available on mobile", () => {
     vi.stubGlobal("matchMedia", vi.fn().mockReturnValue({ matches: true }));
     const { rerender } = render(
